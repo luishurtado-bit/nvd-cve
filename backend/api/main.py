@@ -2,8 +2,9 @@ from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
 
+from api.esquemas import BinomialIn, BinomialOut, Salud
+from api.rutas import datos
 from stats.binomial import prob_al_menos
 
 
@@ -11,19 +12,9 @@ app = FastAPI(title="NVD/CVE - Probabilidad")
 router = APIRouter(prefix="/api")
 
 
-class BinomialIn(BaseModel):
-    n: int = Field(gt=0)
-    p: float = Field(ge=0, le=1)
-    k: int = Field(ge=0)
-
-
-class BinomialOut(BaseModel):
-    prob_al_menos_k: float
-
-
-@router.get("/salud")
-def salud() -> dict[str, str]:
-    return {"estado": "ok"}
+@router.get("/salud", response_model=Salud)
+def salud() -> Salud:
+    return Salud(estado="ok")
 
 
 @router.post("/binomial", response_model=BinomialOut)
@@ -35,6 +26,7 @@ def binomial(datos: BinomialIn) -> BinomialOut:
     )
 
 
+router.include_router(datos.router)
 app.include_router(router)
 
 
