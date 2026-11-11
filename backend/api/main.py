@@ -2,7 +2,7 @@ from pathlib import Path
 from fastapi import APIRouter, FastAPI
 from fastapi.staticfiles import StaticFiles
 from api.esquemas import Salud
-from api.rutas import binomial, datos, probabilidad
+from api.rutas import binomial, dashboard, datos, probabilidad
 
 app = FastAPI(title="NVD/CVE - Probabilidad")
 router = APIRouter(prefix="/api")
@@ -14,6 +14,7 @@ def salud() -> Salud:
 router.include_router(datos.router)
 router.include_router(probabilidad.router)
 router.include_router(binomial.router)
+router.include_router(dashboard.router)
 app.include_router(router)
 
 # Sirve el frontend compilado si existe

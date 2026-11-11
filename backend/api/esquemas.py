@@ -148,3 +148,34 @@ class BinomialOut(BaseModel):
     confianza: float | None
     n_minimo: int | None = Field(description="Menor n con P(X ≥ 1) ≥ confianza")
     advertencias: list[Advertencia]
+
+# --- Dashboard ---
+
+class ConteoCategoria(BaseModel):
+    categoria: str
+    conteo: int = Field(ge=0)
+    proporcion: float = Field(ge=0, le=1, description="Sobre el total de CVE con dato")
+
+class DistribucionOut(BaseModel):
+    total: int = Field(description="CVE con dato en esa columna")
+    categorias: list[ConteoCategoria]
+
+class PuntoSerie(BaseModel):
+    fecha: date
+    conteo: int = Field(ge=0)
+
+class SerieDiariaOut(BaseModel):
+    total: int
+    puntos: list[PuntoSerie] = Field(description="Un punto por día, incluidos los días sin CVE")
+
+class IntervaloHistograma(BaseModel):
+    desde: float
+    hasta: float
+    conteo: int = Field(ge=0)
+
+class HistogramaOut(BaseModel):
+    n: int
+    media: float | None
+    mediana: float | None
+    desviacion: float | None = Field(description="Desviación estándar muestral")
+    intervalos: list[IntervaloHistograma]
