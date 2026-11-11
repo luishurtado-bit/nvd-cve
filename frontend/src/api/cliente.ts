@@ -39,7 +39,10 @@ async function extraerMensaje(respuesta: Response): Promise<string> {
   } catch {
     // la respuesta no traía JSON
   }
-  return `Error ${respuesta.status} del servidor`
+    if (respuesta.status === 502 || respuesta.status === 503 || respuesta.status === 504) {
+        return 'No hay conexión con el backend. ¿Está levantado?'
+    }
+    return `Error ${respuesta.status} del servidor`
 }
 
 async function pedir<T>(ruta: string, opciones?: RequestInit): Promise<T> {
