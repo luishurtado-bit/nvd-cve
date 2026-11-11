@@ -1,11 +1,8 @@
 from pathlib import Path
-
 from fastapi import APIRouter, FastAPI
 from fastapi.staticfiles import StaticFiles
-
-from api.esquemas import BinomialIn, BinomialOut, Salud
-from api.rutas import datos, probabilidad
-from stats.binomial import prob_al_menos
+from api.esquemas import Salud
+from api.rutas import binomial, datos, probabilidad
 
 app = FastAPI(title="NVD/CVE - Probabilidad")
 router = APIRouter(prefix="/api")
@@ -14,16 +11,9 @@ router = APIRouter(prefix="/api")
 def salud() -> Salud:
     return Salud(estado="ok")
 
-@router.post("/binomial", response_model=BinomialOut)
-def binomial(datos: BinomialIn) -> BinomialOut:
-    return BinomialOut(
-        prob_al_menos_k=prob_al_menos(
-            datos.n, datos.p, datos.k
-        )
-    )
-
 router.include_router(datos.router)
 router.include_router(probabilidad.router)
+router.include_router(binomial.router)
 app.include_router(router)
 
 # Sirve el frontend compilado si existe

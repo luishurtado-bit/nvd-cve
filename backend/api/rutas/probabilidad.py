@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
-
-from api import mocks
+from api import fuente
 from api.esquemas import (
     BayesIn,
     BayesOut,
@@ -11,7 +10,7 @@ from api.esquemas import (
     ReglasOut,
     TablaEventos,
 )
-from stats.eventos import Conteos, Criterios, contar_eventos
+from stats.eventos import Conteos
 from stats.probabilidad import (
     bayes,
     complemento,
@@ -30,20 +29,13 @@ NOTA_DEPENDENCIA = (
     "propiedad de la métrica, no un hallazgo empírico."
 )
 
-def _conteos(criterios: CriteriosIn) -> Conteos:
-    # B7: cambiar mocks.dataframe() por el DataFrame cargado
-    c = contar_eventos(mocks.dataframe(), Criterios(**criterios.model_dump()))
-    if c.N == 0:
-        raise HTTPException(status_code=422, detail="No hay CVE cargados: N = 0")
-    return c
-
 def _interseccion(c: Conteos, x: str, y: str) -> int:
     return getattr(c, "".join(sorted(x + y)))
 
 @router.post("/eventos", response_model=EventosOut)
 def eventos(criterios: CriteriosIn) -> EventosOut:
     """N, conteos y probabilidades de A, B, C y sus intersecciones."""
-    c = _conteos(criterios)
+    c = fuente.conteos(criterios)
 
     def fila(conteo: int) -> ConteoProb:
         return ConteoProb(conteo=conteo, probabilidad=probabilidad(conteo, c.N))
@@ -65,7 +57,7 @@ def eventos(criterios: CriteriosIn) -> EventosOut:
 @router.post("/reglas", response_model=ReglasOut)
 def reglas(datos: ReglasIn) -> ReglasOut:
     """Complemento, unión, intersección e independencia de dos eventos."""
-    c = _conteos(datos.criterios)
+    c = fuente.conteos(datos.criterios)
     x, y = datos.x, datos.y
     p_x = probabilidad(getattr(c, x), c.N)
     p_y = probabilidad(getattr(c, y), c.N)
@@ -92,7 +84,7 @@ def reglas(datos: ReglasIn) -> ReglasOut:
 @router.post("/bayes", response_model=BayesOut)
 def bayes_(datos: BayesIn) -> BayesOut:
     """Actualización de P(A) al observar E (B o C), con prior editable."""
-    c = _conteos(datos.criterios)
+    c = fuente.conteos(datos.criterios)
     e = datos.condicionante
     n_e = getattr(c, e)
     n_ae = _interseccion(c, "A", e)

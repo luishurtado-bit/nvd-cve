@@ -113,9 +113,38 @@ class BayesOut(BaseModel):
 # --- Binomial ---
 
 class BinomialIn(BaseModel):
-    n: int = Field(gt=0)
-    p: float = Field(ge=0, le=1)
-    k: int = Field(ge=0)
+    n: int = Field(gt=0, description="Tamaño del lote")
+    k: int = Field(ge=0, description="Número de CVE críticos")
+    p: float | None = Field(
+        None, ge=0, le=1, description="Si falta, se estima como K/N con los criterios"
+    )
+    confianza: float | None = Field(
+        None, gt=0, lt=1, description="Para el n mínimo con P(X ≥ 1) ≥ confianza"
+    )
+    criterios: CriteriosIn = CriteriosIn()
+
+class PuntoPmf(BaseModel):
+    k: int
+    probabilidad: float
+
+class Advertencia(BaseModel):
+    codigo: str
+    mensaje: str
 
 class BinomialOut(BaseModel):
-    prob_al_menos_k: float
+    n: int
+    k: int
+    p: float
+    p_estimada: bool = Field(description="True si p se estimó como K/N")
+    N: int = Field(description="Tamaño de Ω")
+    K: int = Field(description="Críticos en Ω (evento A)")
+    pmf: list[PuntoPmf]
+    prob_igual: float = Field(description="P(X = k)")
+    prob_a_lo_sumo: float = Field(description="P(X ≤ k)")
+    prob_al_menos: float = Field(description="P(X ≥ k)")
+    media: float = Field(description="E(X) = n·p")
+    varianza: float = Field(description="Var(X) = n·p·(1 − p)")
+    desviacion: float
+    confianza: float | None
+    n_minimo: int | None = Field(description="Menor n con P(X ≥ 1) ≥ confianza")
+    advertencias: list[Advertencia]
