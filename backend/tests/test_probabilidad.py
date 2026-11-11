@@ -5,10 +5,13 @@ N = 1000, |A| = 100 (críticos), |B| = 750 (red), |A ∩ B| = 90.
 import pytest
 
 from stats.probabilidad import (
+    bayes,
     complemento,
     condicional,
     interseccion,
+    posterior,
     probabilidad,
+    probabilidad_total,
     son_independientes,
     union,
 )
@@ -17,6 +20,9 @@ N, N_A, N_B, N_AB = 1000, 100, 750, 90
 P_A = probabilidad(N_A, N)
 P_B = probabilidad(N_B, N)
 P_AB = probabilidad(N_AB, N)
+P_B_DADO_A = condicional(P_AB, P_A)  # 0,90
+# P(B | Aᶜ) = P(B ∩ Aᶜ) / P(Aᶜ) = (0,75 − 0,09) / 0,90
+P_B_DADO_AC = condicional(P_B - P_AB, complemento(P_A))
 
 
 def test_probabilidades_de_los_eventos() -> None:
@@ -66,3 +72,44 @@ def test_probabilidad_con_entradas_invalidas(conteo: int, total: int) -> None:
 def test_probabilidad_fuera_de_rango() -> None:
     with pytest.raises(ValueError):
         complemento(1.5)
+
+
+def test_condicional_respecto_al_complemento() -> None:
+    assert P_B_DADO_AC == pytest.approx(0.7333, abs=1e-4)
+
+
+def test_probabilidad_total() -> None:
+    # 0,90·0,10 + 0,7333·0,90 = 0,75
+    assert probabilidad_total(P_B_DADO_A, P_B_DADO_AC, P_A) == pytest.approx(0.75)
+
+
+def test_bayes() -> None:
+    # (0,90·0,10) / 0,75 = 0,12
+    assert bayes(P_B_DADO_A, P_A, P_B) == pytest.approx(0.12)
+
+
+def test_bayes_con_p_b_cero() -> None:
+    with pytest.raises(ValueError):
+        bayes(0.5, 0.1, 0.0)
+
+
+def test_posterior_con_el_prior_de_los_datos() -> None:
+    # Sin editar el prior, el posterior es P(A | B) = 0,12
+    assert posterior(P_A, P_B_DADO_A, P_B_DADO_AC) == pytest.approx(0.12)
+
+
+def test_posterior_con_prior_editado() -> None:
+    # 0,90·0,20 / (0,90·0,20 + 0,7333·0,80) = 0,18 / 0,76667 ≈ 0,2348
+    assert posterior(0.20, P_B_DADO_A, P_B_DADO_AC) == pytest.approx(
+        0.2348, abs=1e-4
+    )
+
+
+@pytest.mark.parametrize(("prior", "esperado"), [(0.0, 0.0), (1.0, 1.0)])
+def test_posterior_en_los_extremos(prior: float, esperado: float) -> None:
+    assert posterior(prior, P_B_DADO_A, P_B_DADO_AC) == pytest.approx(esperado)
+
+
+def test_posterior_con_prior_invalido() -> None:
+    with pytest.raises(ValueError):
+        posterior(1.2, P_B_DADO_A, P_B_DADO_AC)

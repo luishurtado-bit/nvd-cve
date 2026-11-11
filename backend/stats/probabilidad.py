@@ -51,3 +51,32 @@ def son_independientes(
     for valor, nombre in ((p_a, "P(A)"), (p_b, "P(B)"), (p_ab, "P(A ∩ B)")):
         _validar_prob(valor, nombre)
     return math.isclose(p_ab, p_a * p_b, abs_tol=tolerancia)
+
+
+def probabilidad_total(p_b_dado_a: float, p_b_dado_ac: float, p_a: float) -> float:
+    """P(B) = P(B | A)·P(A) + P(B | Aᶜ)·P(Aᶜ). Ecuación (5)."""
+    _validar_prob(p_b_dado_a, "P(B | A)")
+    _validar_prob(p_b_dado_ac, "P(B | Aᶜ)")
+    return p_b_dado_a * p_a + p_b_dado_ac * complemento(p_a)
+
+
+def bayes(p_b_dado_a: float, p_a: float, p_b: float) -> float:
+    """P(A | B) = P(B | A)·P(A) / P(B). Ecuación (6)."""
+    _validar_prob(p_b_dado_a, "P(B | A)")
+    _validar_prob(p_a, "P(A)")
+    _validar_prob(p_b, "P(B)")
+    if p_b == 0:
+        raise ValueError("P(B) = 0: el teorema de Bayes no está definido")
+    return p_b_dado_a * p_a / p_b
+
+
+def posterior(prior: float, p_b_dado_a: float, p_b_dado_ac: float) -> float:
+    """Probabilidad posterior de A al observar B, con prior editable.
+
+    Las verosimilitudes P(B | A) y P(B | Aᶜ) salen de los datos; el prior
+    reemplaza a P(A) en la probabilidad total (5) y en Bayes (6). Si el
+    prior es el P(A) de los datos, el resultado coincide con P(A | B).
+    """
+    _validar_prob(prior, "prior")
+    p_b = probabilidad_total(p_b_dado_a, p_b_dado_ac, prior)
+    return bayes(p_b_dado_a, prior, p_b)
