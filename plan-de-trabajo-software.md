@@ -21,7 +21,8 @@ Los valores de ejemplo salen del informe (hipotéticos): N = 1000, P(A) = 0,10, 
 
 ## 2. Reglas del proyecto
 
-- **Ramas y PR:** cada tarea en su rama (`feature/nombre`), Pull Request revisado por otra persona antes de unir a `main`. `main` siempre debe arrancar.
+- **Ramas y PR:** cada quien trabaja en su rama personal (por ejemplo, `snydev`) o en una rama por tarea (`feature/nombre`), y une a `main` mediante un Pull Request revisado por otra persona. `main` siempre debe arrancar.
+- **Commits:** formato Conventional Commits en español, `tipo(alcance): descripción` (por ejemplo, `feat(stats): reglas básicas de probabilidad`). Se marca con `!` cuando cambia la forma de un endpoint (`feat(api)!: ...`) para que el frontend regenere los tipos.
 - **Backend:** toda la estadística vive en `backend/stats/`, sin importar FastAPI, y cada función nueva lleva una prueba contra un cálculo manual o el informe.
 - **Frontend:** TypeScript estricto, **sin `any`**; los tipos de la API se generan, no se escriben a mano.
 - **Alcance:** solo Binomial, Bayes y reglas de probabilidad. **No** se implementa Normal, TLC, intervalos ni pruebas de hipótesis.
@@ -42,13 +43,17 @@ Todas las rutas cuelgan de `/api`. Los nombres de campos van en español, como e
 | `GET /datos/resumen` | — | Resumen de datos del conjunto cargado |
 | `POST /eventos` | Definición de A, B y C (umbral de `baseScore`, vector de ataque, privilegios) | `N`, conteos de A, B, C y de las intersecciones, y sus probabilidades |
 | `POST /reglas` | Eventos elegidos | Complemento, unión, intersección y comprobación de independencia |
-| `POST /bayes` | Evento condicionante, probabilidad previa (opcional, editable) | `P(A\|B)`, `P(B\|A)`, `P(B)` por probabilidad total y posterior |
+| `POST /bayes` | Evento condicionante (`B` o `C`), probabilidad previa de A (opcional, editable) | `P(A\|E)`, `P(E\|A)`, `P(E\|Aᶜ)`, `P(E)` por probabilidad total y posterior, donde E es el evento condicionante |
 | `POST /binomial` | `n`, `k`, `p` (opcional; si falta se estima como K/N) y confianza deseada (opcional) | Tabla de la pmf, `P(X=k)`, `P(X≤k)`, `P(X≥k)`, `E(X)`, `Var(X)`, `n` mínimo y advertencias |
 | `GET /dashboard/severidad` | — | Conteo por severidad |
 | `GET /dashboard/vector-ataque` | — | Conteo por vector de ataque |
 | `GET /dashboard/serie-diaria` | — | CVE publicados por día |
 | `GET /dashboard/histograma` | `bins` (opcional) | Intervalos y frecuencias de `baseScore`, más media, mediana y desviación |
 | `GET /dashboard/cwe` | `top` (opcional) | Los CWE más frecuentes |
+| `GET /exportar/{tabla}` | `tabla`: `cve`, `eventos`, `reglas`, `bayes` o `binomial` | Archivo CSV con esa tabla de resultados (RF7) |
+| `GET /ejecuciones` | — | Registro de las ejecuciones con sus parámetros (reproducibilidad) |
+
+**Cómo se usa la probabilidad previa en `/bayes`:** las verosimilitudes `P(E|A)` y `P(E|Aᶜ)` siempre salen de los datos. Si no se envía prior, se usa `P(A)` del conjunto cargado y el posterior coincide con `P(A|E)`. Si se envía, el prior reemplaza a `P(A)` en la probabilidad total, `P(E) = P(E|A)·prior + P(E|Aᶜ)·(1 − prior)`, y el posterior es `P(E|A)·prior / P(E)`. Con esto se ve cómo cambia la probabilidad de que un CVE sea crítico al conocer su vector de ataque (B) **o** sus privilegios (C), como pide la propuesta.
 
 **Resumen de datos** (respuesta común de carga y resumen):
 ```json
@@ -72,13 +77,13 @@ Este contrato es un punto de partida: se ajusta en la primera reunión y despué
 Tamaño: **S** pequeña, **M** mediana, **L** grande.
 
 ### Fase 1: base y mocks
-- [ ] **B1 (M) Módulo `stats/`:** definir eventos sobre un DataFrame (A: `baseScore` ≥ umbral; B: vector de red; C: sin privilegios), probabilidades, complemento, unión, intersección, independencia, condicional, probabilidad total y Bayes con prior editable. Pruebas contra los números del informe.
+- [ ] **B1 (M) Módulo `stats/`:** definir eventos sobre un DataFrame (A: `baseScore` ≥ umbral; B: vector de red; C: sin privilegios), probabilidades, complemento, unión, intersección, independencia, condicional, probabilidad total y Bayes con prior editable, condicionando por B o por C. Separar **conteos → probabilidades** (funciones puras) de **DataFrame → conteos**, para probar directo con los números del informe.
 - [ ] **B2 (S) Binomial en `stats/`:** pmf, `P(X=k)`, `P(X≤k)`, `P(X≥k)`, `E`, `Var`, `n` mínimo para una confianza dada, y las advertencias. Pruebas (por ejemplo, `P(X≥3)` para Bin(20; 0,10) ≈ 0,3231).
-- [ ] **B3 (S) Endpoints con mocks:** todas las rutas del contrato devolviendo datos fijos y la forma final, con modelos de entrada y salida en Pydantic. **Es lo primero que necesita el frontend.**
+- [ ] **B3 (S) Endpoints con mocks:** todas las rutas del contrato con la forma final y modelos de entrada y salida en Pydantic. Los cálculos usan las funciones reales de `stats/` sobre los conteos hipotéticos del informe, así que en B7 solo cambia la fuente de datos. **Es lo primero que necesita el frontend.**
 
 ### Fase 2: datos de la NVD
-- [ ] **B4 (M) Cliente de la API (`nvd/`):** consulta con `pubStartDate`/`pubEndDate`, paginación, reintentos y respeto del límite de solicitudes, con la clave leída desde `.env`.
-- [ ] **B5 (M) Depuración:** excluir *Rejected* y CVE sin puntuación; **una puntuación por CVE** con prioridad v3.1 → v3.0 → v4.0; extraer `baseScore`, severidad, vector de ataque, privilegios, CWE y fecha. Reportar descargados, rechazados, sin puntuación y N.
+- [ ] **B4 (M) Cliente de la API (`nvd/`):** consulta con `pubStartDate`/`pubEndDate`, paginación (`startIndex`, `resultsPerPage` ≤ 2000), reintentos y respeto del límite de solicitudes, con la clave leída desde `.env`. La API acepta como máximo **120 días** entre `pubStartDate` y `pubEndDate`, así que un periodo más largo se parte en tramos. Límite: **5 solicitudes cada 30 s sin clave y 50 con clave**.
+- [ ] **B5 (M) Depuración:** excluir *Rejected* y CVE sin puntuación; **una puntuación por CVE** con prioridad v3.1 → v3.0 → v4.0 y, dentro de cada versión, la métrica **Primary** (de la NVD) antes que la **Secondary** (de la CNA); extraer `baseScore`, severidad, vector de ataque, privilegios, CWE y fecha. Reportar descargados, rechazados, sin puntuación y N.
 - [ ] **B6 (S) Almacenamiento:** guardar lo descargado en `data/` (CSV o parquet) y poder cargarlo desde ahí, para no depender de la API durante la demo. Carga por archivo CSV subido.
 - [ ] **B7 (M) Conectar la estadística con datos reales:** `/datos/*`, `/eventos`, `/reglas`, `/bayes` y `/binomial` dejan de usar mocks.
 
@@ -86,6 +91,8 @@ Tamaño: **S** pequeña, **M** mediana, **L** grande.
 - [ ] **B8 (M) Endpoints del dashboard:** conteos por severidad y vector, serie diaria, histograma con media, mediana y desviación, y top de CWE.
 - [ ] **B9 (S) Errores y validaciones:** mensajes claros (`P(B)=0`, `N=0`, rangos inválidos, API caída o con límite excedido) con códigos HTTP correctos.
 - [ ] **B10 (S) Descarga lenta:** si la consulta tarda mucho, devolver el progreso o permitir lanzarla aparte (por ejemplo, un script que descarga y guarda).
+- [ ] **B14 (S) Exportar resultados (RF7):** `GET /exportar/{tabla}` devuelve en CSV la tabla de CVE depurados y las de eventos, reglas, Bayes y binomial.
+- [ ] **B15 (S) Registro de ejecuciones:** guardar los parámetros de cada cálculo (periodo, criterios de los eventos, prior, `n`, `k`, `p`) con fecha y hora en `data/ejecuciones.jsonl`, y exponerlos en `GET /ejecuciones`, para que cada resultado sea reproducible (requisito no funcional de la propuesta).
 
 ### Fase 4: cierre
 - [ ] **B11 (S) Pruebas de API:** una prueba por endpoint; los cálculos comparados con el informe.
@@ -97,12 +104,12 @@ Tamaño: **S** pequeña, **M** mediana, **L** grande.
 ## 5. Frontend (dos personas)
 
 Base común (la arma **Front A** al inicio y Front B la usa):
-- [ ] **F0 (S) Estructura:** rutas (por ejemplo, React Router), layout con navegación, cliente de la API tipado y generación de tipos desde `/openapi.json`, componentes de carga y de error.
+- [ ] **F0 (S) Estructura:** rutas (por ejemplo, React Router), layout con navegación, cliente de la API tipado y componentes de carga y de error. Añadir a `package.json` un script para regenerar los tipos, por ejemplo `"tipos": "openapi-typescript http://localhost:8000/openapi.json -o src/api/schema.d.ts"`, y correrlo cada vez que llegue un commit marcado con `!`.
 
 ### Front A: parte estadística (Estadística Inferencial)
 - [ ] **FA1 (M) Pantalla de datos y eventos:** formulario para definir A, B y C (umbral, vector, privilegios), tabla con `N`, conteos y probabilidades, y el resumen de datos (descargados, rechazados, sin puntuación).
 - [ ] **FA2 (M) Reglas de probabilidad:** complemento, unión, intersección y comprobación de independencia (comparar `P(A∩B)` con `P(A)·P(B)`), con el aviso de que A y B son dependientes por construcción del CVSS.
-- [ ] **FA3 (M) Condicional y Bayes:** entradas con prior editable y presentación del paso a paso (P(A\|B), P(B\|A), probabilidad total, posterior).
+- [ ] **FA3 (M) Condicional y Bayes:** elegir el evento condicionante (B o C), prior editable y presentación del paso a paso (P(A\|E), P(E\|A), P(E\|Aᶜ), probabilidad total, posterior).
 - [ ] **FA4 (L) Binomial:** entradas `n`, `k` y `p` (estimado o manual), resultados (`P(X=k)`, `P(X≤k)`, `P(X≥k)`, `E`, `Var`), gráfico de la pmf con las barras de `P(X≥k)` resaltadas, cálculo del `n` mínimo y las advertencias del backend.
 
 ### Front B: datos y dashboard (Electiva III)
@@ -110,6 +117,7 @@ Base común (la arma **Front A** al inicio y Front B la usa):
 - [ ] **FB2 (L) Dashboard descriptivo:** tarjetas con los totales, gráfico de severidad, vector de ataque, serie diaria, histograma de `baseScore` con media, mediana y desviación, y top de CWE.
 - [ ] **FB3 (S) Filtros y tablas:** filtrar el dashboard (por severidad, por fecha) y una tabla de CVE con búsqueda.
 - [ ] **FB4 (S) Diseño y responsive:** consistencia visual, estados vacíos y de carga.
+- [ ] **FB5 (S) Exportar (RF7):** botones para descargar las tablas en CSV (desde `/exportar/{tabla}`) y los gráficos como imagen PNG.
 
 ### Cierre (los dos)
 - [ ] **FC1 (S) Integración:** quitar dependencias de mocks, revisar casos límite con datos reales.
@@ -124,7 +132,7 @@ Base común (la arma **Front A** al inicio y Front B la usa):
 Fase 1:  B1, B2 (stats)  ─►  B3 (endpoints con mocks) ─────────────┐
          F0 (estructura) ─►  FA1..FA4 y FB1..FB2 con mocks  ◄──────┘
 Fase 2:  B4 ─► B5 ─► B6 ─► B7  (datos reales)
-Fase 3:  B8 (dashboard) ─► FB2/FB3 con datos reales; B9, B10
+Fase 3:  B8 (dashboard) ─► FB2/FB3 con datos reales; B9, B10; B14 ─► FB5; B15
 Fase 4:  integración (FC1), pruebas (B11, FC2), despliegue (B12), demo (B13, FC3)
 ```
 
@@ -138,6 +146,7 @@ Fase 4:  integración (FC1), pruebas (B11, FC2), despliegue (B12), demo (B13, FC
 | Riesgo | Mitigación |
 |---|---|
 | La API de la NVD es lenta o limita las solicitudes | Descargar una vez, guardar en `data/` y trabajar desde ahí; tener un conjunto fijo para la demo |
+| La API rechaza rangos de más de 120 días | Partir el periodo en tramos de 120 días como máximo |
 | El periodo de datos aún no está decidido | Parametrizar el rango; los mocks usan los números hipotéticos del informe |
 | Cambios en el contrato rompen el frontend | Tipos generados desde OpenAPI y aviso en la reunión de sincronización |
 | Muchos CVE sin puntuación reducen N | Mostrar siempre descargados, rechazados, sin puntuación y N |
@@ -154,4 +163,6 @@ Fase 4:  integración (FC1), pruebas (B11, FC2), despliegue (B12), demo (B13, FC
 - [ ] Ejecuta la **actualización de Bayes** con prior editable.
 - [ ] Calcula el **modelo asignado** (Binomial).
 - [ ] Muestra resultados claros para la **demostración del software** del informe.
+- [ ] **Exporta** tablas y figuras (RF7).
+- [ ] **Registra los parámetros** de cada ejecución para que sea reproducible.
 - [ ] Para Electiva III: **consumo de API, tratamiento de datos, análisis descriptivo y dashboard**.
