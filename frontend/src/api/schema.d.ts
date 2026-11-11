@@ -21,6 +21,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/datos/cargar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cargar
+         * @description Descarga los CVE del periodo desde la API de la NVD (simulado).
+         */
+        post: operations["cargar_api_datos_cargar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datos/archivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cargar Archivo
+         * @description Carga los CVE desde un archivo CSV subido (simulado).
+         */
+        post: operations["cargar_archivo_api_datos_archivo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datos/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resumen
+         * @description Resumen del conjunto de datos cargado (simulado).
+         */
+        get: operations["resumen_api_datos_resumen_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/eventos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Eventos
+         * @description N, conteos y probabilidades de A, B, C y sus intersecciones.
+         */
+        post: operations["eventos_api_eventos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reglas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reglas
+         * @description Complemento, unión, intersección e independencia de dos eventos.
+         */
+        post: operations["reglas_api_reglas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bayes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bayes
+         * @description Actualización de P(A) al observar E (B o C), con prior editable.
+         */
+        post: operations["bayes__api_bayes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/binomial": {
         parameters: {
             query?: never;
@@ -30,8 +150,111 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Binomial */
+        /**
+         * Binomial
+         * @description X ~ Bin(n, p): número de CVE críticos en un lote de n (RF6).
+         */
         post: operations["binomial_api_binomial_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/severidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Severidad
+         * @description Conteo por severidad, de CRITICAL a NONE.
+         */
+        get: operations["severidad_api_dashboard_severidad_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/vector-ataque": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vector Ataque
+         * @description Conteo por vector de ataque, de mayor a menor.
+         */
+        get: operations["vector_ataque_api_dashboard_vector_ataque_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/serie-diaria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Serie Diaria
+         * @description CVE publicados por día.
+         */
+        get: operations["serie_diaria_api_dashboard_serie_diaria_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/histograma": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Histograma
+         * @description Histograma de baseScore en [0, 10] con media, mediana y desviación.
+         */
+        get: operations["histograma_api_dashboard_histograma_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/cwe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cwe
+         * @description Los `top` CWE más frecuentes; `total` cuenta todos los CVE con CWE.
+         */
+        get: operations["cwe_api_dashboard_cwe_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -42,24 +265,426 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Advertencia */
+        Advertencia: {
+            /** Codigo */
+            codigo: string;
+            /** Mensaje */
+            mensaje: string;
+        };
+        /** BayesIn */
+        BayesIn: {
+            /**
+             * @default {
+             *       "umbral": 9,
+             *       "vector": "NETWORK",
+             *       "privilegios": "NONE"
+             *     }
+             */
+            criterios: components["schemas"]["CriteriosIn"];
+            /**
+             * Condicionante
+             * @default B
+             * @enum {string}
+             */
+            condicionante: "B" | "C";
+            /**
+             * Prior
+             * @description Probabilidad previa de A; si falta, se usa P(A)
+             */
+            prior?: number | null;
+        };
+        /** BayesOut */
+        BayesOut: {
+            /**
+             * Condicionante
+             * @enum {string}
+             */
+            condicionante: "B" | "C";
+            /**
+             * P A
+             * @description P(A) de los datos
+             */
+            p_a: number;
+            /**
+             * Prior
+             * @description Probabilidad previa usada
+             */
+            prior: number;
+            /**
+             * P E Dado A
+             * @description P(E | A), de los datos
+             */
+            p_e_dado_a: number;
+            /**
+             * P E Dado Ac
+             * @description P(E | Aᶜ), de los datos
+             */
+            p_e_dado_ac: number;
+            /**
+             * P E
+             * @description P(E) por probabilidad total con el prior
+             */
+            p_e: number;
+            /**
+             * P A Dado E
+             * @description P(A | E) de los datos
+             */
+            p_a_dado_e: number;
+            /**
+             * Posterior
+             * @description P(A | E) con el prior usado
+             */
+            posterior: number;
+        };
         /** BinomialIn */
         BinomialIn: {
-            /** N */
+            /**
+             * N
+             * @description Tamaño del lote
+             */
             n: number;
-            /** P */
-            p: number;
-            /** K */
+            /**
+             * K
+             * @description Número de CVE críticos
+             */
             k: number;
+            /**
+             * P
+             * @description Si falta, se estima como K/N con los criterios
+             */
+            p?: number | null;
+            /**
+             * Confianza
+             * @description Para el n mínimo con P(X ≥ 1) ≥ confianza
+             */
+            confianza?: number | null;
+            /**
+             * @default {
+             *       "umbral": 9,
+             *       "vector": "NETWORK",
+             *       "privilegios": "NONE"
+             *     }
+             */
+            criterios: components["schemas"]["CriteriosIn"];
         };
         /** BinomialOut */
         BinomialOut: {
-            /** Prob Al Menos K */
-            prob_al_menos_k: number;
+            /** N */
+            n: number;
+            /** K */
+            k: number;
+            /** P */
+            p: number;
+            /**
+             * P Estimada
+             * @description True si p se estimó como K/N
+             */
+            p_estimada: boolean;
+            /**
+             * N
+             * @description Tamaño de Ω
+             */
+            N: number;
+            /**
+             * K
+             * @description Críticos en Ω (evento A)
+             */
+            K: number;
+            /** Pmf */
+            pmf: components["schemas"]["PuntoPmf"][];
+            /**
+             * Prob Igual
+             * @description P(X = k)
+             */
+            prob_igual: number;
+            /**
+             * Prob A Lo Sumo
+             * @description P(X ≤ k)
+             */
+            prob_a_lo_sumo: number;
+            /**
+             * Prob Al Menos
+             * @description P(X ≥ k)
+             */
+            prob_al_menos: number;
+            /**
+             * Media
+             * @description E(X) = n·p
+             */
+            media: number;
+            /**
+             * Varianza
+             * @description Var(X) = n·p·(1 − p)
+             */
+            varianza: number;
+            /** Desviacion */
+            desviacion: number;
+            /** Confianza */
+            confianza: number | null;
+            /**
+             * N Minimo
+             * @description Menor n con P(X ≥ 1) ≥ confianza
+             */
+            n_minimo: number | null;
+            /** Advertencias */
+            advertencias: components["schemas"]["Advertencia"][];
+        };
+        /** Body_cargar_archivo_api_datos_archivo_post */
+        Body_cargar_archivo_api_datos_archivo_post: {
+            /** Archivo */
+            archivo: string;
+        };
+        /** CargarIn */
+        CargarIn: {
+            /**
+             * Inicio
+             * Format: date
+             */
+            inicio: string;
+            /**
+             * Fin
+             * Format: date
+             */
+            fin: string;
+        };
+        /** ConteoCategoria */
+        ConteoCategoria: {
+            /** Categoria */
+            categoria: string;
+            /** Conteo */
+            conteo: number;
+            /**
+             * Proporcion
+             * @description Sobre el total de CVE con dato
+             */
+            proporcion: number;
+        };
+        /** ConteoProb */
+        ConteoProb: {
+            /** Conteo */
+            conteo: number;
+            /** Probabilidad */
+            probabilidad: number;
+        };
+        /**
+         * CriteriosIn
+         * @description Definición de los eventos (Tabla I del informe).
+         */
+        CriteriosIn: {
+            /**
+             * Umbral
+             * @description A: baseScore ≥ umbral
+             * @default 9
+             */
+            umbral: number;
+            /**
+             * Vector
+             * @description B: vector de ataque
+             * @default NETWORK
+             * @enum {string}
+             */
+            vector: "NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL";
+            /**
+             * Privilegios
+             * @description C: privilegios requeridos
+             * @default NONE
+             * @enum {string}
+             */
+            privilegios: "NONE" | "LOW" | "HIGH";
+        };
+        /** DistribucionOut */
+        DistribucionOut: {
+            /**
+             * Total
+             * @description CVE con dato en esa columna
+             */
+            total: number;
+            /** Categorias */
+            categorias: components["schemas"]["ConteoCategoria"][];
+        };
+        /** EventosOut */
+        EventosOut: {
+            criterios: components["schemas"]["CriteriosIn"];
+            /** N */
+            N: number;
+            eventos: components["schemas"]["TablaEventos"];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HistogramaOut */
+        HistogramaOut: {
+            /** N */
+            n: number;
+            /** Media */
+            media: number | null;
+            /** Mediana */
+            mediana: number | null;
+            /**
+             * Desviacion
+             * @description Desviación estándar muestral
+             */
+            desviacion: number | null;
+            /** Intervalos */
+            intervalos: components["schemas"]["IntervaloHistograma"][];
+        };
+        /** IntervaloHistograma */
+        IntervaloHistograma: {
+            /** Desde */
+            desde: number;
+            /** Hasta */
+            hasta: number;
+            /** Conteo */
+            conteo: number;
+        };
+        /**
+         * Periodo
+         * @description Periodo de análisis; null mientras no esté fijado.
+         */
+        Periodo: {
+            /** Inicio */
+            inicio?: string | null;
+            /** Fin */
+            fin?: string | null;
+        };
+        /** PuntoPmf */
+        PuntoPmf: {
+            /** K */
+            k: number;
+            /** Probabilidad */
+            probabilidad: number;
+        };
+        /** PuntoSerie */
+        PuntoSerie: {
+            /**
+             * Fecha
+             * Format: date
+             */
+            fecha: string;
+            /** Conteo */
+            conteo: number;
+        };
+        /** ReglasIn */
+        ReglasIn: {
+            /**
+             * @default {
+             *       "umbral": 9,
+             *       "vector": "NETWORK",
+             *       "privilegios": "NONE"
+             *     }
+             */
+            criterios: components["schemas"]["CriteriosIn"];
+            /**
+             * X
+             * @default A
+             * @enum {string}
+             */
+            x: "A" | "B" | "C";
+            /**
+             * Y
+             * @default B
+             * @enum {string}
+             */
+            y: "A" | "B" | "C";
+        };
+        /** ReglasOut */
+        ReglasOut: {
+            /**
+             * X
+             * @enum {string}
+             */
+            x: "A" | "B" | "C";
+            /**
+             * Y
+             * @enum {string}
+             */
+            y: "A" | "B" | "C";
+            /** P X */
+            p_x: number;
+            /** P Y */
+            p_y: number;
+            /**
+             * P X Complemento
+             * @description P(Xᶜ) = 1 − P(X)
+             */
+            p_x_complemento: number;
+            /**
+             * P Y Complemento
+             * @description P(Yᶜ) = 1 − P(Y)
+             */
+            p_y_complemento: number;
+            /**
+             * P Interseccion
+             * @description P(X ∩ Y)
+             */
+            p_interseccion: number;
+            /**
+             * P Union
+             * @description P(X ∪ Y) = P(X) + P(Y) − P(X ∩ Y)
+             */
+            p_union: number;
+            /**
+             * Producto
+             * @description P(X)·P(Y), para comparar con P(X ∩ Y)
+             */
+            producto: number;
+            /** Independientes */
+            independientes: boolean;
+            /** Nota */
+            nota?: string | null;
+        };
+        /** ResumenDatos */
+        ResumenDatos: {
+            periodo: components["schemas"]["Periodo"];
+            /** Descargados */
+            descargados: number;
+            /**
+             * Rechazados
+             * @description CVE con estado Rejected
+             */
+            rechazados: number;
+            /**
+             * Sin Puntuacion
+             * @description CVE sin puntuación CVSS
+             */
+            sin_puntuacion: number;
+            /**
+             * N
+             * @description Tamaño del espacio muestral Ω
+             */
+            N: number;
+        };
+        /** Salud */
+        Salud: {
+            /** Estado */
+            estado: string;
+        };
+        /** SerieDiariaOut */
+        SerieDiariaOut: {
+            /** Total */
+            total: number;
+            /**
+             * Puntos
+             * @description Un punto por día, incluidos los días sin CVE
+             */
+            puntos: components["schemas"]["PuntoSerie"][];
+        };
+        /** TablaEventos */
+        TablaEventos: {
+            A: components["schemas"]["ConteoProb"];
+            B: components["schemas"]["ConteoProb"];
+            C: components["schemas"]["ConteoProb"];
+            /** @description A ∩ B */
+            AB: components["schemas"]["ConteoProb"];
+            /** @description A ∩ C */
+            AC: components["schemas"]["ConteoProb"];
+            /** @description B ∩ C */
+            BC: components["schemas"]["ConteoProb"];
+            /** @description A ∩ B ∩ C */
+            ABC: components["schemas"]["ConteoProb"];
         };
         /** ValidationError */
         ValidationError: {
@@ -98,9 +723,192 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
+                    "application/json": components["schemas"]["Salud"];
+                };
+            };
+        };
+    };
+    cargar_api_datos_cargar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CargarIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumenDatos"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cargar_archivo_api_datos_archivo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_cargar_archivo_api_datos_archivo_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumenDatos"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resumen_api_datos_resumen_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumenDatos"];
+                };
+            };
+        };
+    };
+    eventos_api_eventos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriteriosIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventosOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reglas_api_reglas_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReglasIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReglasOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bayes__api_bayes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BayesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BayesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -125,6 +933,128 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BinomialOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    severidad_api_dashboard_severidad_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DistribucionOut"];
+                };
+            };
+        };
+    };
+    vector_ataque_api_dashboard_vector_ataque_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DistribucionOut"];
+                };
+            };
+        };
+    };
+    serie_diaria_api_dashboard_serie_diaria_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SerieDiariaOut"];
+                };
+            };
+        };
+    };
+    histograma_api_dashboard_histograma_get: {
+        parameters: {
+            query?: {
+                bins?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistogramaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cwe_api_dashboard_cwe_get: {
+        parameters: {
+            query?: {
+                top?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DistribucionOut"];
                 };
             };
             /** @description Validation Error */
