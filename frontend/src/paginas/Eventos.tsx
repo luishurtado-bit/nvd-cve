@@ -85,113 +85,126 @@ export default function Eventos() {
     <section>
       <h2>Datos y eventos A, B y C</h2>
 
-      <h3>Resumen de los datos</h3>
-      {errorResumen && <MensajeError mensaje={errorResumen} />}
-      {!resumen && !errorResumen && <Cargando />}
-      {resumen && (
-        <ul>
-          <li>
-            Periodo:{' '}
-            {resumen.periodo.inicio && resumen.periodo.fin
-              ? `${resumen.periodo.inicio} a ${resumen.periodo.fin}`
-              : 'sin fijar'}
-          </li>
-          <li>CVE descargados: {resumen.descargados}</li>
-          <li>Rechazados (Rejected): {resumen.rechazados}</li>
-          <li>Sin puntuación CVSS: {resumen.sin_puntuacion}</li>
-          <li>
-            <strong>N (espacio muestral Ω): {resumen.N}</strong>
-          </li>
-        </ul>
-      )}
+      <div className="dos-columnas">
+        {/* Columna izquierda: resumen y formulario */}
+        <div className="columna-formulario">
+          <h3>Resumen de los datos</h3>
+          {errorResumen && <MensajeError mensaje={errorResumen} />}
+          {!resumen && !errorResumen && <Cargando />}
+          {resumen && (
+            <ul>
+              <li>
+                Periodo:{' '}
+                {resumen.periodo.inicio && resumen.periodo.fin
+                  ? `${resumen.periodo.inicio} a ${resumen.periodo.fin}`
+                  : 'sin fijar'}
+              </li>
+              <li>CVE descargados: {resumen.descargados}</li>
+              <li>Rechazados (Rejected): {resumen.rechazados}</li>
+              <li>Sin puntuación CVSS: {resumen.sin_puntuacion}</li>
+              <li>
+                <strong>N (espacio muestral Ω): {resumen.N}</strong>
+              </li>
+            </ul>
+          )}
 
-      <h3>Definición de los eventos</h3>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          void calcular()
-        }}
-        style={{ display: 'grid', gap: '0.75rem', maxWidth: '28rem' }}
-      >
-        <label>
-          Umbral de criticidad (A: baseScore ≥ umbral){' '}
-          <input
-            type="number"
-            min={0}
-            max={10}
-            step={0.1}
-            value={umbral}
-            onChange={(e) => setUmbral(e.target.value)}
-          />
-        </label>
-        <label>
-          Vector de ataque (B){' '}
-          <select
-            value={vector}
-            onChange={(e) => {
-              const op = vectores.find((v) => v.valor === e.target.value)
-              if (op) setVector(op.valor)
+          <h3>Definición de los eventos</h3>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              void calcular()
             }}
+            style={{ display: 'grid', gap: '0.75rem' }}
           >
-            {vectores.map((v) => (
-              <option key={v.valor} value={v.valor}>
-                {v.texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Privilegios requeridos (C){' '}
-          <select
-            value={privilegios}
-            onChange={(e) => {
-              const op = privilegiosOpciones.find((p) => p.valor === e.target.value)
-              if (op) setPrivilegios(op.valor)
-            }}
-          >
-            {privilegiosOpciones.map((p) => (
-              <option key={p.valor} value={p.valor}>
-                {p.texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" disabled={cargando}>
-          Calcular eventos
-        </button>
-      </form>
+            <label>
+              Umbral de criticidad (A: baseScore ≥ umbral){' '}
+              <input
+                type="number"
+                min={0}
+                max={10}
+                step={0.1}
+                value={umbral}
+                onChange={(e) => setUmbral(e.target.value)}
+              />
+            </label>
+            <label>
+              Vector de ataque (B){' '}
+              <select
+                value={vector}
+                onChange={(e) => {
+                  const op = vectores.find((v) => v.valor === e.target.value)
+                  if (op) setVector(op.valor)
+                }}
+              >
+                {vectores.map((v) => (
+                  <option key={v.valor} value={v.valor}>
+                    {v.texto}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Privilegios requeridos (C){' '}
+              <select
+                value={privilegios}
+                onChange={(e) => {
+                  const op = privilegiosOpciones.find((p) => p.valor === e.target.value)
+                  if (op) setPrivilegios(op.valor)
+                }}
+              >
+                {privilegiosOpciones.map((p) => (
+                  <option key={p.valor} value={p.valor}>
+                    {p.texto}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="submit" disabled={cargando}>
+              Calcular eventos
+            </button>
+          </form>
+        </div>
 
-      {cargando && <Cargando texto="Calculando…" />}
-      {error && <MensajeError mensaje={error} />}
+        {/* Columna derecha: resultados */}
+        <div className="columna-resultados">
+          {!resultado && !cargando && !error && (
+            <p className="vacio">
+              Los resultados aparecerán aquí al pulsar «Calcular eventos».
+            </p>
+          )}
+          {cargando && <Cargando texto="Calculando…" />}
+          {error && <MensajeError mensaje={error} />}
 
-      {resultado && (
-        <>
-          <h3>Resultados (N = {resultado.N})</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Evento</th>
-                <th>Conteo</th>
-                <th>Probabilidad</th>
-                <th>Porcentaje</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filas.map((f) => {
-                const dato = resultado.eventos[f.clave]
-                return (
-                  <tr key={f.clave}>
-                    <td>{f.evento}</td>
-                    <td>{dato.conteo}</td>
-                    <td>{dato.probabilidad.toFixed(4)}</td>
-                    <td>{(dato.probabilidad * 100).toFixed(2)} %</td>
+          {resultado && (
+            <>
+              <h3>Resultados (N = {resultado.N})</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Evento</th>
+                    <th>Conteo</th>
+                    <th>Probabilidad</th>
+                    <th>Porcentaje</th>
                   </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </>
-      )}
+                </thead>
+                <tbody>
+                  {filas.map((f) => {
+                    const dato = resultado.eventos[f.clave]
+                    return (
+                      <tr key={f.clave}>
+                        <td>{f.evento}</td>
+                        <td>{dato.conteo}</td>
+                        <td>{dato.probabilidad.toFixed(4)}</td>
+                        <td>{(dato.probabilidad * 100).toFixed(2)} %</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </>
+          )}
+        </div>
+      </div>
     </section>
   )
 }

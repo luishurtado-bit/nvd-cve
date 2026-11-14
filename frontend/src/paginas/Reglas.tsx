@@ -92,138 +92,162 @@ export default function Reglas() {
 
       <p
         role="note"
-        style={{ border: '1px solid goldenrod', padding: '0.5rem', maxWidth: '40rem' }}
+        style={{
+          border: '1px solid goldenrod',
+          background: '#fffbeb',
+          borderRadius: '8px',
+          padding: '0.75rem 1rem',
+          marginBottom: '1.5rem',
+        }}
       >
         <strong>Ojo:</strong> A y B pueden ser dependientes, porque la puntuación CVSS y
         el vector de ataque están relacionados. No se asume independencia: se comprueba
         comparando P(X ∩ Y) con P(X)·P(Y).
       </p>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          void calcular()
-        }}
-        style={{ display: 'grid', gap: '0.75rem', maxWidth: '28rem' }}
-      >
-        <label>Evento X {sel(x, setX)}</label>
-        <label>Evento Y {sel(y, setY)}</label>
-        <label>
-          Umbral de criticidad (A){' '}
-          <input
-            type="number"
-            min={0}
-            max={10}
-            step={0.1}
-            value={umbral}
-            onChange={(e) => setUmbral(e.target.value)}
-          />
-        </label>
-        <label>
-          Vector de ataque (B){' '}
-          <select
-            value={vector}
-            onChange={(e) => {
-              const op = vectores.find((v) => v.valor === e.target.value)
-              if (op) setVector(op.valor)
+      <div className="dos-columnas">
+        {/* Columna izquierda: formulario */}
+        <div className="columna-formulario">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              void calcular()
             }}
+            style={{ display: 'grid', gap: '0.75rem' }}
           >
-            {vectores.map((v) => (
-              <option key={v.valor} value={v.valor}>
-                {v.texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Privilegios (C){' '}
-          <select
-            value={privilegios}
-            onChange={(e) => {
-              const op = privilegiosOpciones.find((p) => p.valor === e.target.value)
-              if (op) setPrivilegios(op.valor)
-            }}
-          >
-            {privilegiosOpciones.map((p) => (
-              <option key={p.valor} value={p.valor}>
-                {p.texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" disabled={cargando}>
-          Calcular reglas
-        </button>
-      </form>
+            <label>Evento X {sel(x, setX)}</label>
+            <label>Evento Y {sel(y, setY)}</label>
+            <label>
+              Umbral de criticidad (A){' '}
+              <input
+                type="number"
+                min={0}
+                max={10}
+                step={0.1}
+                value={umbral}
+                onChange={(e) => setUmbral(e.target.value)}
+              />
+            </label>
+            <label>
+              Vector de ataque (B){' '}
+              <select
+                value={vector}
+                onChange={(e) => {
+                  const op = vectores.find((v) => v.valor === e.target.value)
+                  if (op) setVector(op.valor)
+                }}
+              >
+                {vectores.map((v) => (
+                  <option key={v.valor} value={v.valor}>
+                    {v.texto}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Privilegios (C){' '}
+              <select
+                value={privilegios}
+                onChange={(e) => {
+                  const op = privilegiosOpciones.find((p) => p.valor === e.target.value)
+                  if (op) setPrivilegios(op.valor)
+                }}
+              >
+                {privilegiosOpciones.map((p) => (
+                  <option key={p.valor} value={p.valor}>
+                    {p.texto}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="submit" disabled={cargando}>
+              Calcular reglas
+            </button>
+          </form>
+        </div>
 
-      {cargando && <Cargando texto="Calculando…" />}
-      {error && <MensajeError mensaje={error} />}
+        {/* Columna derecha: resultados */}
+        <div className="columna-resultados">
+          {!resultado && !cargando && !error && (
+            <p className="vacio">
+              Los resultados aparecerán aquí al pulsar «Calcular reglas».
+            </p>
+          )}
+          {cargando && <Cargando texto="Calculando…" />}
+          {error && <MensajeError mensaje={error} />}
 
-      {resultado && (
-        <>
-          <h3>
-            Resultados para {resultado.x} y {resultado.y}
-          </h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Regla</th>
-                <th>Fórmula</th>
-                <th>Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Complemento de {resultado.x}</td>
-                <td>P({resultado.x}ᶜ) = 1 − P({resultado.x}) = 1 − {f(resultado.p_x)}</td>
-                <td>{f(resultado.p_x_complemento)}</td>
-              </tr>
-              <tr>
-                <td>Complemento de {resultado.y}</td>
-                <td>P({resultado.y}ᶜ) = 1 − P({resultado.y}) = 1 − {f(resultado.p_y)}</td>
-                <td>{f(resultado.p_y_complemento)}</td>
-              </tr>
-              <tr>
-                <td>Intersección</td>
-                <td>
-                  P({resultado.x} ∩ {resultado.y})
-                </td>
-                <td>{f(resultado.p_interseccion)}</td>
-              </tr>
-              <tr>
-                <td>Unión</td>
-                <td>
-                  P({resultado.x}) + P({resultado.y}) − P({resultado.x} ∩ {resultado.y}) ={' '}
-                  {f(resultado.p_x)} + {f(resultado.p_y)} − {f(resultado.p_interseccion)}
-                </td>
-                <td>{f(resultado.p_union)}</td>
-              </tr>
-            </tbody>
-          </table>
+          {resultado && (
+            <>
+              <h3>
+                Resultados para {resultado.x} y {resultado.y}
+              </h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Regla</th>
+                    <th>Fórmula</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Complemento de {resultado.x}</td>
+                    <td>
+                      P({resultado.x}ᶜ) = 1 − P({resultado.x}) = 1 − {f(resultado.p_x)}
+                    </td>
+                    <td>{f(resultado.p_x_complemento)}</td>
+                  </tr>
+                  <tr>
+                    <td>Complemento de {resultado.y}</td>
+                    <td>
+                      P({resultado.y}ᶜ) = 1 − P({resultado.y}) = 1 − {f(resultado.p_y)}
+                    </td>
+                    <td>{f(resultado.p_y_complemento)}</td>
+                  </tr>
+                  <tr>
+                    <td>Intersección</td>
+                    <td>
+                      P({resultado.x} ∩ {resultado.y})
+                    </td>
+                    <td>{f(resultado.p_interseccion)}</td>
+                  </tr>
+                  <tr>
+                    <td>Unión</td>
+                    <td>
+                      P({resultado.x}) + P({resultado.y}) − P({resultado.x} ∩{' '}
+                      {resultado.y}) = {f(resultado.p_x)} + {f(resultado.p_y)} −{' '}
+                      {f(resultado.p_interseccion)}
+                    </td>
+                    <td>{f(resultado.p_union)}</td>
+                  </tr>
+                </tbody>
+              </table>
 
-          <h3>¿Son independientes?</h3>
-          <p>
-            Si fueran independientes, P({resultado.x} ∩ {resultado.y}) sería igual a
-            P({resultado.x})·P({resultado.y}).
-          </p>
-          <ul>
-            <li>
-              P({resultado.x} ∩ {resultado.y}) = {f(resultado.p_interseccion)}
-            </li>
-            <li>
-              P({resultado.x})·P({resultado.y}) = {f(resultado.producto)}
-            </li>
-          </ul>
-          <p>
-            <strong>
-              {resultado.independientes
-                ? `Los valores coinciden: ${resultado.x} y ${resultado.y} resultan independientes.`
-                : `Los valores son distintos: ${resultado.x} y ${resultado.y} son dependientes.`}
-            </strong>
-          </p>
-          {resultado.nota && <p>{resultado.nota}</p>}
-        </>
-      )}
+              <h3>¿Son independientes?</h3>
+              <p>
+                Si fueran independientes, P({resultado.x} ∩ {resultado.y}) sería igual a
+                P({resultado.x})·P({resultado.y}).
+              </p>
+              <ul>
+                <li>
+                  P({resultado.x} ∩ {resultado.y}) = {f(resultado.p_interseccion)}
+                </li>
+                <li>
+                  P({resultado.x})·P({resultado.y}) = {f(resultado.producto)}
+                </li>
+              </ul>
+              <p>
+                <strong>
+                  {resultado.independientes
+                    ? `Los valores coinciden: ${resultado.x} y ${resultado.y} resultan independientes.`
+                    : `Los valores son distintos: ${resultado.x} y ${resultado.y} son dependientes.`}
+                </strong>
+              </p>
+              {resultado.nota && <p>{resultado.nota}</p>}
+            </>
+          )}
+        </div>
+      </div>
     </section>
   )
 }

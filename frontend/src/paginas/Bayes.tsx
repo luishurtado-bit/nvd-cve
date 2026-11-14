@@ -80,146 +80,160 @@ export default function Bayes() {
   return (
     <section>
       <h2>Probabilidad condicional y teorema de Bayes</h2>
-      <p style={{ maxWidth: '40rem' }}>
+      <p style={{ marginBottom: '1.5rem' }}>
         Pregunta: si sabemos que ocurrió el evento E (B o C), ¿cuál es la probabilidad de
         que el CVE sea crítico (A)? El teorema de Bayes actualiza la probabilidad previa
         de A con esa información.
       </p>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          void calcular()
-        }}
-        style={{ display: 'grid', gap: '0.75rem', maxWidth: '30rem' }}
-      >
-        <label>
-          Evento condicionante E{' '}
-          <select
-            value={condicionante}
-            onChange={(e) => {
-              const op = condicionantes.find((c) => c.valor === e.target.value)
-              if (op) setCondicionante(op.valor)
+      <div className="dos-columnas">
+        {/* Columna izquierda: formulario */}
+        <div className="columna-formulario">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              void calcular()
             }}
+            style={{ display: 'grid', gap: '0.75rem' }}
           >
-            {condicionantes.map((c) => (
-              <option key={c.valor} value={c.valor}>
-                {c.texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Probabilidad previa de A (opcional, entre 0 y 1){' '}
-          <input
-            type="number"
-            min={0}
-            max={1}
-            step={0.01}
-            placeholder="vacío = P(A) de los datos"
-            value={prior}
-            onChange={(e) => setPrior(e.target.value)}
-          />
-        </label>
-        <label>
-          Umbral de criticidad (A){' '}
-          <input
-            type="number"
-            min={0}
-            max={10}
-            step={0.1}
-            value={umbral}
-            onChange={(e) => setUmbral(e.target.value)}
-          />
-        </label>
-        <label>
-          Vector de ataque (B){' '}
-          <select
-            value={vector}
-            onChange={(e) => {
-              const op = vectores.find((v) => v.valor === e.target.value)
-              if (op) setVector(op.valor)
-            }}
-          >
-            {vectores.map((v) => (
-              <option key={v.valor} value={v.valor}>
-                {v.texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Privilegios (C){' '}
-          <select
-            value={privilegios}
-            onChange={(e) => {
-              const op = privilegiosOpciones.find((p) => p.valor === e.target.value)
-              if (op) setPrivilegios(op.valor)
-            }}
-          >
-            {privilegiosOpciones.map((p) => (
-              <option key={p.valor} value={p.valor}>
-                {p.texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" disabled={cargando}>
-          Calcular Bayes
-        </button>
-      </form>
+            <label>
+              Evento condicionante E{' '}
+              <select
+                value={condicionante}
+                onChange={(e) => {
+                  const op = condicionantes.find((c) => c.valor === e.target.value)
+                  if (op) setCondicionante(op.valor)
+                }}
+              >
+                {condicionantes.map((c) => (
+                  <option key={c.valor} value={c.valor}>
+                    {c.texto}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Probabilidad previa de A (opcional, entre 0 y 1){' '}
+              <input
+                type="number"
+                min={0}
+                max={1}
+                step={0.01}
+                placeholder="vacío = P(A) de los datos"
+                value={prior}
+                onChange={(e) => setPrior(e.target.value)}
+              />
+            </label>
+            <label>
+              Umbral de criticidad (A){' '}
+              <input
+                type="number"
+                min={0}
+                max={10}
+                step={0.1}
+                value={umbral}
+                onChange={(e) => setUmbral(e.target.value)}
+              />
+            </label>
+            <label>
+              Vector de ataque (B){' '}
+              <select
+                value={vector}
+                onChange={(e) => {
+                  const op = vectores.find((v) => v.valor === e.target.value)
+                  if (op) setVector(op.valor)
+                }}
+              >
+                {vectores.map((v) => (
+                  <option key={v.valor} value={v.valor}>
+                    {v.texto}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Privilegios (C){' '}
+              <select
+                value={privilegios}
+                onChange={(e) => {
+                  const op = privilegiosOpciones.find((p) => p.valor === e.target.value)
+                  if (op) setPrivilegios(op.valor)
+                }}
+              >
+                {privilegiosOpciones.map((p) => (
+                  <option key={p.valor} value={p.valor}>
+                    {p.texto}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="submit" disabled={cargando}>
+              Calcular Bayes
+            </button>
+          </form>
+        </div>
 
-      {cargando && <Cargando texto="Calculando…" />}
-      {error && <MensajeError mensaje={error} />}
+        {/* Columna derecha: resultados */}
+        <div className="columna-resultados">
+          {!resultado && !cargando && !error && (
+            <p className="vacio">
+              Los resultados aparecerán aquí al pulsar «Calcular Bayes».
+            </p>
+          )}
+          {cargando && <Cargando texto="Calculando…" />}
+          {error && <MensajeError mensaje={error} />}
 
-      {resultado && (
-        <>
-          <h3>Paso a paso (E = {resultado.condicionante})</h3>
-          <ol>
-            <li>
-              <strong>Probabilidad previa de A.</strong> En los datos, P(A) ={' '}
-              {f(resultado.p_a)}. Probabilidad previa usada: {f(resultado.prior)}
-              {resultado.prior === resultado.p_a
-                ? ' (la de los datos).'
-                : ' (editada por ti).'}
-            </li>
-            <li>
-              <strong>Verosimilitudes, calculadas con los datos.</strong>
-              <br />
-              P(E | A) = {f(resultado.p_e_dado_a)}: entre los críticos, la fracción que
-              cumple E.
-              <br />
-              P(E | Aᶜ) = {f(resultado.p_e_dado_ac)}: entre los no críticos, la
-              fracción que cumple E.
-            </li>
-            <li>
-              <strong>Probabilidad total de E.</strong>
-              <br />
-              P(E) = P(E | A)·prior + P(E | Aᶜ)·(1 − prior)
-              <br />
-              P(E) = {f(resultado.p_e_dado_a)} · {f(resultado.prior)} +{' '}
-              {f(resultado.p_e_dado_ac)} · {f(1 - resultado.prior)} = {f(resultado.p_e)}
-            </li>
-            <li>
-              <strong>Teorema de Bayes.</strong>
-              <br />
-              P(A | E) = P(E | A)·prior / P(E)
-              <br />
-              P(A | E) = {f(resultado.p_e_dado_a)} · {f(resultado.prior)} /{' '}
-              {f(resultado.p_e)} = <strong>{f(resultado.posterior)}</strong>
-            </li>
-            <li>
-              <strong>Comparación.</strong> Con los datos, P(A | E) ={' '}
-              {f(resultado.p_a_dado_e)}. Con el prior usado, el posterior es{' '}
-              {f(resultado.posterior)}.
-            </li>
-          </ol>
-          <p>
-            <strong>Interpretación:</strong> pasamos de {f(resultado.prior)} antes de
-            conocer E a {f(resultado.posterior)} después de saber que ocurrió E.
-          </p>
-        </>
-      )}
+          {resultado && (
+            <>
+              <h3>Paso a paso (E = {resultado.condicionante})</h3>
+              <ol>
+                <li>
+                  <strong>Probabilidad previa de A.</strong> En los datos, P(A) ={' '}
+                  {f(resultado.p_a)}. Probabilidad previa usada: {f(resultado.prior)}
+                  {resultado.prior === resultado.p_a
+                    ? ' (la de los datos).'
+                    : ' (editada por ti).'}
+                </li>
+                <li>
+                  <strong>Verosimilitudes, calculadas con los datos.</strong>
+                  <br />
+                  P(E | A) = {f(resultado.p_e_dado_a)}: entre los críticos, la fracción
+                  que cumple E.
+                  <br />
+                  P(E | Aᶜ) = {f(resultado.p_e_dado_ac)}: entre los no críticos, la
+                  fracción que cumple E.
+                </li>
+                <li>
+                  <strong>Probabilidad total de E.</strong>
+                  <br />
+                  P(E) = P(E | A)·prior + P(E | Aᶜ)·(1 − prior)
+                  <br />
+                  P(E) = {f(resultado.p_e_dado_a)} · {f(resultado.prior)} +{' '}
+                  {f(resultado.p_e_dado_ac)} · {f(1 - resultado.prior)} ={' '}
+                  {f(resultado.p_e)}
+                </li>
+                <li>
+                  <strong>Teorema de Bayes.</strong>
+                  <br />
+                  P(A | E) = P(E | A)·prior / P(E)
+                  <br />
+                  P(A | E) = {f(resultado.p_e_dado_a)} · {f(resultado.prior)} /{' '}
+                  {f(resultado.p_e)} = <strong>{f(resultado.posterior)}</strong>
+                </li>
+                <li>
+                  <strong>Comparación.</strong> Con los datos, P(A | E) ={' '}
+                  {f(resultado.p_a_dado_e)}. Con el prior usado, el posterior es{' '}
+                  {f(resultado.posterior)}.
+                </li>
+              </ol>
+              <p>
+                <strong>Interpretación:</strong> pasamos de {f(resultado.prior)} antes de
+                conocer E a {f(resultado.posterior)} después de saber que ocurrió E.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
     </section>
   )
 }

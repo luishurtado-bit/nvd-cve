@@ -98,171 +98,200 @@ export default function Binomial() {
   return (
     <section>
       <h2>Distribución binomial</h2>
-      <p style={{ maxWidth: '40rem' }}>
+      <p style={{ marginBottom: '1.5rem' }}>
         X es el número de CVE críticos (evento A) en un lote de n CVE. Se modela como
         X ~ Bin(n, p), donde p es la probabilidad de que un CVE sea crítico.
       </p>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          void calcular()
-        }}
-        style={{ display: 'grid', gap: '0.75rem', maxWidth: '30rem' }}
-      >
-        <label>
-          n: tamaño del lote{' '}
-          <input type="number" min={1} step={1} value={n} onChange={(e) => setN(e.target.value)} />
-        </label>
-        <label>
-          k: número de CVE críticos{' '}
-          <input type="number" min={0} step={1} value={k} onChange={(e) => setK(e.target.value)} />
-        </label>
-        <label>
-          p: probabilidad de éxito (opcional){' '}
-          <input
-            type="number"
-            min={0}
-            max={1}
-            step={0.01}
-            placeholder="vacío = estimar como K/N"
-            value={p}
-            onChange={(e) => setP(e.target.value)}
-          />
-        </label>
-        <label>
-          Confianza para el n mínimo (opcional){' '}
-          <input
-            type="number"
-            min={0}
-            max={1}
-            step={0.01}
-            placeholder="por ejemplo 0.95"
-            value={confianza}
-            onChange={(e) => setConfianza(e.target.value)}
-          />
-        </label>
-        <label>
-          Umbral de criticidad (A){' '}
-          <input
-            type="number"
-            min={0}
-            max={10}
-            step={0.1}
-            value={umbral}
-            onChange={(e) => setUmbral(e.target.value)}
-          />
-        </label>
-        <label>
-          Vector de ataque (B){' '}
-          <select
-            value={vector}
-            onChange={(e) => {
-              const op = vectores.find((v) => v.valor === e.target.value)
-              if (op) setVector(op.valor)
+      <div className="dos-columnas">
+        {/* Columna izquierda: formulario */}
+        <div className="columna-formulario">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              void calcular()
             }}
+            style={{ display: 'grid', gap: '0.75rem' }}
           >
-            {vectores.map((v) => (
-              <option key={v.valor} value={v.valor}>
-                {v.texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Privilegios (C){' '}
-          <select
-            value={privilegios}
-            onChange={(e) => {
-              const op = privilegiosOpciones.find((o) => o.valor === e.target.value)
-              if (op) setPrivilegios(op.valor)
-            }}
-          >
-            {privilegiosOpciones.map((o) => (
-              <option key={o.valor} value={o.valor}>
-                {o.texto}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" disabled={cargando}>
-          Calcular binomial
-        </button>
-      </form>
-
-      {cargando && <Cargando texto="Calculando…" />}
-      {error && <MensajeError mensaje={error} />}
-
-      {resultado && (
-        <>
-          <h3>Parámetros usados</h3>
-          <p>
-            n = {resultado.n}, k = {resultado.k}, p = {resultado.p}{' '}
-            {resultado.p_estimada
-              ? `(estimada como K/N = ${resultado.K}/${resultado.N})`
-              : '(ingresada por ti)'}
-          </p>
-
-          {resultado.advertencias.length > 0 && (
-            <div role="alert" style={{ border: '1px solid goldenrod', padding: '0.5rem', maxWidth: '40rem' }}>
-              <strong>Advertencias</strong>
-              <ul>
-                {resultado.advertencias.map((a) => (
-                  <li key={a.codigo}>{a.mensaje}</li>
+            <label>
+              n: tamaño del lote{' '}
+              <input type="number" min={1} step={1} value={n} onChange={(e) => setN(e.target.value)} />
+            </label>
+            <label>
+              k: número de CVE críticos{' '}
+              <input type="number" min={0} step={1} value={k} onChange={(e) => setK(e.target.value)} />
+            </label>
+            <label>
+              p: probabilidad de éxito (opcional){' '}
+              <input
+                type="number"
+                min={0}
+                max={1}
+                step={0.01}
+                placeholder="vacío = estimar como K/N"
+                value={p}
+                onChange={(e) => setP(e.target.value)}
+              />
+            </label>
+            <label>
+              Confianza para el n mínimo (opcional){' '}
+              <input
+                type="number"
+                min={0}
+                max={1}
+                step={0.01}
+                placeholder="por ejemplo 0.95"
+                value={confianza}
+                onChange={(e) => setConfianza(e.target.value)}
+              />
+            </label>
+            <label>
+              Umbral de criticidad (A){' '}
+              <input
+                type="number"
+                min={0}
+                max={10}
+                step={0.1}
+                value={umbral}
+                onChange={(e) => setUmbral(e.target.value)}
+              />
+            </label>
+            <label>
+              Vector de ataque (B){' '}
+              <select
+                value={vector}
+                onChange={(e) => {
+                  const op = vectores.find((v) => v.valor === e.target.value)
+                  if (op) setVector(op.valor)
+                }}
+              >
+                {vectores.map((v) => (
+                  <option key={v.valor} value={v.valor}>
+                    {v.texto}
+                  </option>
                 ))}
-              </ul>
-            </div>
-          )}
+              </select>
+            </label>
+            <label>
+              Privilegios (C){' '}
+              <select
+                value={privilegios}
+                onChange={(e) => {
+                  const op = privilegiosOpciones.find((o) => o.valor === e.target.value)
+                  if (op) setPrivilegios(op.valor)
+                }}
+              >
+                {privilegiosOpciones.map((o) => (
+                  <option key={o.valor} value={o.valor}>
+                    {o.texto}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="submit" disabled={cargando}>
+              Calcular binomial
+            </button>
+          </form>
+        </div>
 
-          <h3>Resultados</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Medida</th>
-                <th>Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>P(X = {resultado.k})</td><td>{f(resultado.prob_igual)}</td></tr>
-              <tr><td>P(X ≤ {resultado.k})</td><td>{f(resultado.prob_a_lo_sumo)}</td></tr>
-              <tr><td>P(X ≥ {resultado.k})</td><td>{f(resultado.prob_al_menos)}</td></tr>
-              <tr><td>Esperanza E(X) = n·p</td><td>{f(resultado.media)}</td></tr>
-              <tr><td>Varianza Var(X) = n·p·(1 − p)</td><td>{f(resultado.varianza)}</td></tr>
-              <tr><td>Desviación estándar</td><td>{f(resultado.desviacion)}</td></tr>
-              {resultado.confianza !== null && (
-                <tr>
-                  <td>n mínimo para P(X ≥ 1) ≥ {resultado.confianza}</td>
-                  <td>{resultado.n_minimo === null ? 'no disponible' : resultado.n_minimo}</td>
-                </tr>
+        {/* Columna derecha: resultados */}
+        <div className="columna-resultados">
+          {!resultado && !cargando && !error && (
+            <p className="vacio">
+              Los resultados aparecerán aquí al pulsar «Calcular binomial».
+            </p>
+          )}
+          {cargando && <Cargando texto="Calculando…" />}
+          {error && <MensajeError mensaje={error} />}
+
+          {resultado && (
+            <>
+              <h3>Parámetros usados</h3>
+              <p>
+                n = {resultado.n}, k = {resultado.k}, p = {resultado.p}{' '}
+                {resultado.p_estimada
+                  ? `(estimada como K/N = ${resultado.K}/${resultado.N})`
+                  : '(ingresada por ti)'}
+              </p>
+
+              {resultado.advertencias.length > 0 && (
+                <div
+                  role="alert"
+                  style={{
+                    border: '1px solid goldenrod',
+                    background: '#fffbeb',
+                    borderRadius: '8px',
+                    padding: '0.75rem 1rem',
+                    marginTop: '1rem',
+                  }}
+                >
+                  <strong>Advertencias</strong>
+                  <ul>
+                    {resultado.advertencias.map((a) => (
+                      <li key={a.codigo}>{a.mensaje}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
-            </tbody>
-          </table>
-          <h3>Gráfica de la función de masa de probabilidad</h3>
-          <GraficoPmf pmf={resultado.pmf} kElegido={resultado.k} />
-          <p>
-            Las barras rojas (k ≥ {resultado.k}) suman P(X ≥ {resultado.k}) ={' '}
-            {f(resultado.prob_al_menos)}.
-          </p>
-          <h3>Tabla de la función de masa de probabilidad</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>k</th>
-                <th>P(X = k)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resultado.pmf.map((punto) => (
-                <tr key={punto.k} style={punto.k >= resultado.k ? { fontWeight: 'bold' } : undefined}>
-                  <td>{punto.k}</td>
-                  <td>{punto.probabilidad.toExponential(4)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p>Las filas en negrita son las que suman P(X ≥ k).</p>
-        </>
-      )}
+
+              <h3>Resultados</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Medida</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>P(X = {resultado.k})</td><td>{f(resultado.prob_igual)}</td></tr>
+                  <tr><td>P(X ≤ {resultado.k})</td><td>{f(resultado.prob_a_lo_sumo)}</td></tr>
+                  <tr><td>P(X ≥ {resultado.k})</td><td>{f(resultado.prob_al_menos)}</td></tr>
+                  <tr><td>Esperanza E(X) = n·p</td><td>{f(resultado.media)}</td></tr>
+                  <tr><td>Varianza Var(X) = n·p·(1 − p)</td><td>{f(resultado.varianza)}</td></tr>
+                  <tr><td>Desviación estándar</td><td>{f(resultado.desviacion)}</td></tr>
+                  {resultado.confianza !== null && (
+                    <tr>
+                      <td>n mínimo para P(X ≥ 1) ≥ {resultado.confianza}</td>
+                      <td>{resultado.n_minimo === null ? 'no disponible' : resultado.n_minimo}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+
+              <h3>Gráfica de la función de masa de probabilidad</h3>
+              <GraficoPmf pmf={resultado.pmf} kElegido={resultado.k} />
+              <p>
+                Las barras rojas (k ≥ {resultado.k}) suman P(X ≥ {resultado.k}) ={' '}
+                {f(resultado.prob_al_menos)}.
+              </p>
+
+              <h3>Tabla de la función de masa de probabilidad</h3>
+              <div className="tabla-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>k</th>
+                      <th>P(X = k)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {resultado.pmf.map((punto) => (
+                      <tr
+                        key={punto.k}
+                        style={punto.k >= resultado.k ? { fontWeight: 'bold' } : undefined}
+                      >
+                        <td>{punto.k}</td>
+                        <td>{punto.probabilidad.toExponential(4)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p>Las filas en negrita son las que suman P(X ≥ k).</p>
+            </>
+          )}
+        </div>
+      </div>
     </section>
   )
 }
