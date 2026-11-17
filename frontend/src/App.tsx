@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './componentes/Layout.tsx'
+import Datos from './paginas/Datos.tsx'
 import Eventos from './paginas/Eventos.tsx'
 import Reglas from './paginas/Reglas.tsx'
 import Bayes from './paginas/Bayes.tsx'
@@ -9,11 +10,14 @@ export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<Navigate to="/eventos" replace />} />
+        {/* Primero se cargan los datos; después se analizan */}
+        <Route index element={<Navigate to="/datos" replace />} />
+        <Route path="datos" element={<Datos />} />
         <Route path="eventos" element={<Eventos />} />
         <Route path="reglas" element={<Reglas />} />
         <Route path="bayes" element={<Bayes />} />
         <Route path="binomial" element={<Binomial />} />
+        <Route path="*" element={<Navigate to="/datos" replace />} />
       </Route>
     </Routes>
   )

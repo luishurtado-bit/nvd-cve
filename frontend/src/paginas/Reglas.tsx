@@ -93,8 +93,8 @@ export default function Reglas() {
       <p
         role="note"
         style={{
-          border: '1px solid goldenrod',
-          background: '#fffbeb',
+          border: '1px solid var(--aviso-borde)',
+          background: 'var(--aviso-fondo)',
           borderRadius: '8px',
           padding: '0.75rem 1rem',
           marginBottom: '1.5rem',
