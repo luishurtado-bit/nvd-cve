@@ -32,7 +32,9 @@ export interface paths {
         put?: never;
         /**
          * Cargar
-         * @description Descarga los CVE del periodo desde la API de la NVD (simulado).
+         * @description Descarga de la API de la NVD los CVE publicados en el periodo, los guarda en
+         *     data/ y los deja como conjunto actual. Para periodos largos conviene el script
+         *     `python -m nvd.descargar`.
          */
         post: operations["cargar_api_datos_cargar_post"];
         delete?: never;
@@ -52,7 +54,7 @@ export interface paths {
         put?: never;
         /**
          * Cargar Archivo
-         * @description Carga los CVE desde un archivo CSV subido (simulado).
+         * @description Carga los CVE desde un CSV con las columnas del formato guardado (ver README).
          */
         post: operations["cargar_archivo_api_datos_archivo_post"];
         delete?: never;
@@ -70,7 +72,7 @@ export interface paths {
         };
         /**
          * Resumen
-         * @description Resumen del conjunto de datos cargado (simulado).
+         * @description Resumen del conjunto actual (origen = "simulado" si no se ha cargado ninguno).
          */
         get: operations["resumen_api_datos_resumen_get"];
         put?: never;
@@ -656,6 +658,13 @@ export interface components {
              * @description Tamaño del espacio muestral Ω
              */
             N: number;
+            /**
+             * Origen
+             * @description De dónde salen los datos: simulados, API de la NVD o CSV
+             * @default simulado
+             * @enum {string}
+             */
+            origen: "simulado" | "api" | "csv";
         };
         /** Salud */
         Salud: {

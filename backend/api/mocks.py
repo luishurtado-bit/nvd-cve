@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from api.esquemas import Periodo, ResumenDatos
+from nvd.extraccion import severidad_cvss
 from stats.eventos import (
     COL_CWE,
     COL_ID,
@@ -38,18 +39,6 @@ _DIAS = 90
 _CWE = ("CWE-79", "CWE-787", "CWE-89", "CWE-20", "CWE-125", "CWE-22", "CWE-416", "NVD-CWE-noinfo")
 _PESOS_CWE = (0.25, 0.15, 0.12, 0.12, 0.1, 0.1, 0.08, 0.08)
 
-def _severidad(puntuacion: float) -> str:
-    """Escala cualitativa de CVSS v3.1."""
-    if puntuacion == 0:
-        return "NONE"
-    if puntuacion < 4:
-        return "LOW"
-    if puntuacion < 7:
-        return "MEDIUM"
-    if puntuacion < 9:
-        return "HIGH"
-    return "CRITICAL"
-
 def resumen(inicio: date | None = None, fin: date | None = None) -> ResumenDatos:
     return ResumenDatos(
         periodo=Periodo(inicio=inicio, fin=fin),
@@ -57,6 +46,7 @@ def resumen(inicio: date | None = None, fin: date | None = None) -> ResumenDatos
         rechazados=RECHAZADOS,
         sin_puntuacion=SIN_PUNTUACION,
         N=N,
+        origen="simulado",
     )
 
 @lru_cache(maxsize=1)
@@ -72,7 +62,7 @@ def dataframe() -> pd.DataFrame:
             filas.append(
                 {
                     COL_PUNTUACION: puntuacion,
-                    COL_SEVERIDAD: _severidad(puntuacion),
+                    COL_SEVERIDAD: severidad_cvss(puntuacion),
                     COL_VECTOR: vector,
                     COL_PRIVILEGIOS: "NONE" if i < sin_priv else "LOW",
                 }

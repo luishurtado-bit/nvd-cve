@@ -7,6 +7,7 @@ VectorAtaque = Literal["NETWORK", "ADJACENT_NETWORK", "ADJACENT", "LOCAL", "PHYS
 Privilegios = Literal["NONE", "LOW", "HIGH"]
 Evento = Literal["A", "B", "C"]
 Condicionante = Literal["B", "C"]
+Origen = Literal["simulado", "api", "csv"]
 
 # --- Salud ---
 
@@ -37,6 +38,9 @@ class ResumenDatos(BaseModel):
     rechazados: int = Field(ge=0, description="CVE con estado Rejected")
     sin_puntuacion: int = Field(ge=0, description="CVE sin puntuación CVSS")
     N: int = Field(ge=0, description="Tamaño del espacio muestral Ω")
+    origen: Origen = Field(
+        "simulado", description="De dónde salen los datos: simulados, API de la NVD o CSV"
+    )
 
 # --- Eventos ---
 

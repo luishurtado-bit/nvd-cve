@@ -1,10 +1,19 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import APIRouter, FastAPI
 from fastapi.staticfiles import StaticFiles
+from api import estado
 from api.esquemas import Salud
 from api.rutas import binomial, dashboard, datos, probabilidad
 
-app = FastAPI(title="NVD/CVE - Probabilidad")
+@asynccontextmanager
+async def ciclo_de_vida(_: FastAPI) -> AsyncIterator[None]:
+    # Al arrancar, retoma el último conjunto guardado en data/ (si hay)
+    estado.cargar_ultimo()
+    yield
+
+app = FastAPI(title="NVD/CVE - Probabilidad", lifespan=ciclo_de_vida)
 router = APIRouter(prefix="/api")
 
 @router.get("/salud", response_model=Salud)

@@ -11,12 +11,12 @@ nvd-cve/
 ├── backend/           API en FastAPI
 │   ├── api/           rutas, esquemas (Pydantic) y datos simulados
 │   ├── stats/         estadística pura: eventos, probabilidad, Bayes, binomial, descriptiva
-│   ├── nvd/           cliente de la API de la NVD (fase 2)
+│   ├── nvd/           descarga de la NVD: cliente, extracción, depuración y almacenamiento
 │   ├── tests/         pruebas con pytest
 │   └── requirements.txt
 ├── frontend/          React + TypeScript + Vite
 │   └── src/api/schema.d.ts   tipos generados desde la API (no se editan a mano)
-├── data/              datos descargados (no se suben al repositorio)
+├── data/              CVE descargados en CSV + JSON (no se suben al repositorio)
 └── .env.example       plantilla de variables de entorno
 ```
 
@@ -101,7 +101,9 @@ cp .env.example .env
 NVD_API_KEY=pega_aqui_tu_clave
 ```
 
-El archivo `.env` **nunca** se sube al repositorio. Por ahora la clave no es obligatoria: el backend responde con datos simulados hasta la fase 2.
+El archivo `.env` **nunca** se sube al repositorio, y la clave **nunca** se escribe en el código.
+
+La clave no es obligatoria: sin ella la descarga funciona igual, pero más lenta (la NVD permite 5 solicitudes cada 30 s sin clave y 50 con clave).
 
 ## Levantar el proyecto (uso diario)
 
@@ -126,11 +128,31 @@ npm run dev
 
 Vite reenvía todas las peticiones que empiezan por `/api` al backend en el puerto 8000 (ver `frontend/vite.config.ts`), así que el frontend llama a rutas relativas como `fetch('/api/salud')`. **El backend tiene que estar levantado** para que el frontend reciba datos.
 
+## Datos de la NVD
+
+Mientras no se cargue ningún periodo, la API responde con los **datos simulados** del informe (N = 1000) y `/api/datos/resumen` indica `"origen": "simulado"`. Hay tres formas de cargar datos reales:
+
+1. **Script de descarga** (recomendado para periodos largos), desde `backend/` con el entorno activado:
+
+   ```bash
+   python -m nvd.descargar 2026-01-01 2026-03-31
+   ```
+
+   Parte el periodo en tramos de 120 días (límite de la NVD), pagina, respeta el límite de solicitudes y reintenta ante errores. Al terminar muestra descargados, rechazados, sin puntuación y N. Un trimestre son unos 16 000 CVE y tarda pocos minutos sin clave.
+
+2. **Desde la API:** `POST /api/datos/cargar` con `{"inicio": "AAAA-MM-DD", "fin": "AAAA-MM-DD"}`. La respuesta espera a que termine la descarga, así que conviene para periodos cortos.
+
+3. **Subiendo un CSV:** `POST /api/datos/archivo`. Sirve cualquier CSV guardado en `data/` o uno propio con al menos las columnas `cve_id`, `publicado`, `base_score`, `vector_ataque` y `privilegios` (opcionales: `estado`, `version_cvss`, `severidad`, `cwe`).
+
+Todo lo que se carga se guarda en `data/` (un CSV con lo descargado sin depurar y un JSON con el periodo y el origen). **Al arrancar, el backend retoma el último conjunto guardado**, así que la demo no depende de que la NVD esté disponible. Para volver a los datos simulados basta con mover o borrar los archivos de `data/` y reiniciar.
+
+La depuración (RF2) excluye los CVE *Rejected* y los que no tienen puntuación, y usa una sola puntuación por CVE: CVSS v3.1, luego v3.0 y luego v4.0, prefiriendo la métrica de la NVD (*Primary*) sobre la de la CNA (*Secondary*).
+
 ## Pruebas y verificación
 
 | Qué | Dónde | Comando |
 |---|---|---|
-| Pruebas del backend | `backend/` | `python -m pytest -q` |
+| Pruebas del backend (no usan la red) | `backend/` | `python -m pytest -q` |
 | Revisión de tipos del frontend | `frontend/` | `npx tsc -b` |
 | Lint del frontend | `frontend/` | `npm run lint` |
 | Compilar el frontend | `frontend/` | `npm run build` |

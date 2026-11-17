@@ -50,7 +50,8 @@ def distribucion(
 
 def serie_diaria(fechas: pd.Series) -> list[tuple[date, int]]:
     """CVE por día, incluidos los días sin publicaciones dentro del rango."""
-    dias = pd.to_datetime(fechas.dropna()).dt.normalize()
+    # ISO8601 admite fechas con y sin milisegundos (la NVD manda ambas)
+    dias = pd.to_datetime(fechas.dropna().astype(str), format="ISO8601").dt.normalize()
     if dias.empty:
         return []
     conteos = dias.value_counts().sort_index()

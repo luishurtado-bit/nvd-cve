@@ -3,37 +3,7 @@ from typing import Any
 import pytest
 import requests
 from nvd.cliente import ESPERA_CON_CLAVE, ESPERA_SIN_CLAVE, ClienteNVD, ErrorNVD
-
-class RespuestaFalsa:
-    def __init__(self, status_code: int, cuerpo: Any = None, headers: dict | None = None) -> None:
-        self.status_code = status_code
-        self._cuerpo = cuerpo
-        self.headers = headers or {}
-
-    def json(self) -> Any:
-        if self._cuerpo is None:
-            raise ValueError("no es JSON")
-        return self._cuerpo
-
-class SesionFalsa:
-    """Devuelve, en orden, las respuestas (o lanza las excepciones) que se le dan."""
-
-    def __init__(self, *respuestas: RespuestaFalsa | Exception) -> None:
-        self.respuestas = list(respuestas)
-        self.llamadas: list[dict] = []
-
-    def get(self, url: str, *, params: dict, headers: dict, timeout: float) -> RespuestaFalsa:
-        self.llamadas.append({"url": url, "params": params, "headers": headers})
-        r = self.respuestas.pop(0)
-        if isinstance(r, Exception):
-            raise r
-        return r
-
-def pagina(ids: list[str], total: int) -> RespuestaFalsa:
-    return RespuestaFalsa(
-        200,
-        {"totalResults": total, "resultsPerPage": len(ids), "vulnerabilities": [{"cve": {"id": i}} for i in ids]},
-    )
+from tests.ejemplos_nvd import RespuestaFalsa, SesionFalsa, pagina
 
 def cliente(sesion: SesionFalsa, api_key: str | None = None, **kwargs: Any) -> tuple[ClienteNVD, list[float]]:
     esperas: list[float] = []
