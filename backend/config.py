@@ -3,7 +3,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 RAIZ = Path(__file__).resolve().parent.parent
-_CLAVE_DE_EJEMPLO = "CC8470BA-C3F5-4C38-B798-CDB31F290544"
+# Valor de ejemplo de .env.example: equivale a no tener clave.
+# La clave real va SOLO en .env (ignorado por Git), nunca en el código.
+_CLAVE_DE_EJEMPLO = "pega_aqui_tu_clave"
 
 # No sobrescribe variables que ya estén definidas en el entorno
 load_dotenv(RAIZ / ".env")
