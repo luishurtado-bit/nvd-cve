@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from api import fuente
+from api import fuente, registro
 from api.esquemas import (
     BayesIn,
     BayesOut,
@@ -40,7 +40,7 @@ def eventos(criterios: CriteriosIn) -> EventosOut:
     def fila(conteo: int) -> ConteoProb:
         return ConteoProb(conteo=conteo, probabilidad=probabilidad(conteo, c.N))
 
-    return EventosOut(
+    salida = EventosOut(
         criterios=criterios,
         N=c.N,
         eventos=TablaEventos(
@@ -53,6 +53,8 @@ def eventos(criterios: CriteriosIn) -> EventosOut:
             ABC=fila(c.ABC),
         ),
     )
+    registro.registrar("eventos", criterios.model_dump(), salida.model_dump(mode="json"))
+    return salida
 
 @router.post("/reglas", response_model=ReglasOut)
 def reglas(datos: ReglasIn) -> ReglasOut:
@@ -67,7 +69,7 @@ def reglas(datos: ReglasIn) -> ReglasOut:
     if "A" in (x, y):
         nota = NOTA_DEPENDENCIA.format(otro=y if x == "A" else x)
 
-    return ReglasOut(
+    salida = ReglasOut(
         x=x,
         y=y,
         p_x=p_x,
@@ -80,6 +82,8 @@ def reglas(datos: ReglasIn) -> ReglasOut:
         independientes=son_independientes(p_x, p_y, p_xy),
         nota=nota,
     )
+    registro.registrar("reglas", datos.model_dump(), salida.model_dump(mode="json"))
+    return salida
 
 @router.post("/bayes", response_model=BayesOut)
 def bayes_(datos: BayesIn) -> BayesOut:
@@ -111,7 +115,7 @@ def bayes_(datos: BayesIn) -> BayesOut:
             status_code=422, detail=f"Con prior = {prior:g}, P({e}) = 0"
         )
 
-    return BayesOut(
+    salida = BayesOut(
         condicionante=e,
         p_a=p_a,
         prior=prior,
@@ -121,3 +125,5 @@ def bayes_(datos: BayesIn) -> BayesOut:
         p_a_dado_e=condicional(probabilidad(n_ae, c.N), probabilidad(n_e, c.N)),
         posterior=bayes(p_e_dado_a, prior, p_e),
     )
+    registro.registrar("bayes", datos.model_dump(), salida.model_dump(mode="json"))
+    return salida

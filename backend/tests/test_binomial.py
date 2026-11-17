@@ -121,3 +121,15 @@ def test_calcular_con_p_cero() -> None:
     r = calcular(n, 0.0, 0, confianza=0.95)
     assert r.n_minimo is None
     assert r.prob_igual == pytest.approx(1)
+
+def test_tabla_acumulada() -> None:
+    from stats.binomial import tabla_acumulada
+    tabla = tabla_acumulada(n, p)
+    assert len(tabla) == n + 1
+    k, igual, a_lo_sumo, al_menos = tabla[3]
+    assert k == 3
+    assert igual == pytest.approx(prob_igual(n, p, 3))
+    assert a_lo_sumo == pytest.approx(0.86705, abs=1e-5)
+    assert al_menos == pytest.approx(0.3231, abs=1e-4)
+    assert tabla[0][3] == pytest.approx(1)  # P(X ≥ 0) = 1
+    assert tabla[-1][2] == pytest.approx(1)  # P(X ≤ n) = 1

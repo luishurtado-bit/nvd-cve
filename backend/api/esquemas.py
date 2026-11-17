@@ -1,5 +1,5 @@
-from datetime import date
-from typing import Literal
+from datetime import date, datetime
+from typing import Any, Literal
 from pydantic import BaseModel, Field, model_validator
 
 # Valores de la NVD (CVSS v3.x y v4.0)
@@ -8,6 +8,10 @@ Privilegios = Literal["NONE", "LOW", "HIGH"]
 Evento = Literal["A", "B", "C"]
 Condicionante = Literal["B", "C"]
 Origen = Literal["simulado", "api", "csv"]
+EstadoDescarga = Literal["en_curso", "terminada", "fallida"]
+
+# Tope de n en la binomial: la tabla de la pmf tiene n + 1 filas
+N_MAXIMO_BINOMIAL = 10_000
 
 # --- Salud ---
 
@@ -24,6 +28,8 @@ class CargarIn(BaseModel):
     def _fin_no_antes_de_inicio(self) -> "CargarIn":
         if self.fin < self.inicio:
             raise ValueError("fin debe ser igual o posterior a inicio")
+        if self.inicio > date.today():
+            raise ValueError("inicio no puede ser una fecha futura")
         return self
 
 class Periodo(BaseModel):
@@ -117,7 +123,7 @@ class BayesOut(BaseModel):
 # --- Binomial ---
 
 class BinomialIn(BaseModel):
-    n: int = Field(gt=0, description="Tamaño del lote")
+    n: int = Field(gt=0, le=N_MAXIMO_BINOMIAL, description="Tamaño del lote")
     k: int = Field(ge=0, description="Número de CVE críticos")
     p: float | None = Field(
         None, ge=0, le=1, description="Si falta, se estima como K/N con los criterios"
@@ -183,3 +189,51 @@ class HistogramaOut(BaseModel):
     mediana: float | None
     desviacion: float | None = Field(description="Desviación estándar muestral")
     intervalos: list[IntervaloHistograma]
+
+# --- Descargas en segundo plano ---
+
+class DescargaOut(BaseModel):
+    id: str
+    estado: EstadoDescarga
+    periodo: Periodo
+    tramo: int = Field(description="Tramo de 120 días en curso")
+    n_tramos: int
+    descargados: int = Field(description="CVE descargados hasta ahora")
+    total_tramo: int = Field(description="CVE del tramo en curso según la NVD")
+    mensaje: str | None = Field(None, description="Último aviso de progreso")
+    resumen: ResumenDatos | None = Field(None, description="Al terminar: el resumen de los datos")
+    error: str | None = Field(None, description="Si falló: el motivo")
+    iniciada: datetime
+    terminada: datetime | None = None
+
+# --- Registro de ejecuciones ---
+
+class Ejecucion(BaseModel):
+    fecha: datetime
+    operacion: str
+    origen: Origen = Field(description="Datos con los que se calculó")
+    N: int
+    periodo: Periodo
+    parametros: dict[str, Any]
+    resultado: dict[str, Any]
+
+# --- Exportar (parámetros por query string, para descargar con un enlace) ---
+
+class ReglasQuery(CriteriosIn):
+    x: Evento = "A"
+    y: Evento = "B"
+
+    @model_validator(mode="after")
+    def _eventos_distintos(self) -> "ReglasQuery":
+        if self.x == self.y:
+            raise ValueError("x e y deben ser eventos distintos")
+        return self
+
+class BayesQuery(CriteriosIn):
+    condicionante: Condicionante = "B"
+    prior: float | None = Field(None, ge=0, le=1)
+
+class BinomialQuery(CriteriosIn):
+    n: int = Field(gt=0, le=N_MAXIMO_BINOMIAL)
+    k: int = Field(0, ge=0)
+    p: float | None = Field(None, ge=0, le=1)

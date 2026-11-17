@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from api import fuente
+from api import fuente, registro
 from api.esquemas import Advertencia, BinomialIn, BinomialOut, PuntoPmf
 from stats.binomial import calcular
 from stats.probabilidad import probabilidad
@@ -15,7 +15,7 @@ def binomial(datos: BinomialIn) -> BinomialOut:
 
     r = calcular(datos.n, p, datos.k, confianza=datos.confianza, N=c.N)
 
-    return BinomialOut(
+    salida = BinomialOut(
         n=r.n,
         k=r.k,
         p=r.p,
@@ -33,3 +33,6 @@ def binomial(datos: BinomialIn) -> BinomialOut:
         n_minimo=r.n_minimo,
         advertencias=[Advertencia(codigo=a.codigo, mensaje=a.mensaje) for a in r.advertencias],
     )
+    # Sin la tabla de la pmf: puede tener hasta 10 001 filas
+    registro.registrar("binomial", datos.model_dump(), salida.model_dump(mode="json", exclude={"pmf"}))
+    return salida

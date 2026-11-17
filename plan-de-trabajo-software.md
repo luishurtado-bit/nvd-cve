@@ -50,8 +50,10 @@ Todas las rutas cuelgan de `/api`. Los nombres de campos van en español, como e
 | `GET /dashboard/serie-diaria` | — | CVE publicados por día |
 | `GET /dashboard/histograma` | `bins` (opcional) | Intervalos y frecuencias de `baseScore`, más media, mediana y desviación |
 | `GET /dashboard/cwe` | `top` (opcional) | Los CWE más frecuentes |
-| `GET /exportar/{tabla}` | `tabla`: `cve`, `eventos`, `reglas`, `bayes` o `binomial` | Archivo CSV con esa tabla de resultados (RF7) |
-| `GET /ejecuciones` | — | Registro de las ejecuciones con sus parámetros (reproducibilidad) |
+| `POST /datos/descargas` | `{ inicio, fin }` (fechas) | `202` con el estado de la descarga en segundo plano (`id`, `estado`, tramo, CVE descargados) |
+| `GET /datos/descargas/{id}` | — | Progreso de la descarga y, al terminar, el resumen de datos |
+| `GET /exportar/{tabla}` | `tabla`: `cve`, `eventos`, `reglas`, `bayes` o `binomial`; los mismos parámetros del cálculo por query string (por ejemplo, `?umbral=7` o `?n=20&p=0.1`) | Archivo CSV con esa tabla de resultados (RF7) |
+| `GET /ejecuciones` | `limite` (opcional, 1 a 500) | Registro de las ejecuciones con sus parámetros y los datos usados, de la más reciente a la más antigua (reproducibilidad) |
 
 **Cómo se usa la probabilidad previa en `/bayes`:** las verosimilitudes `P(E|A)` y `P(E|Aᶜ)` siempre salen de los datos. Si no se envía prior, se usa `P(A)` del conjunto cargado y el posterior coincide con `P(A|E)`. Si se envía, el prior reemplaza a `P(A)` en la probabilidad total, `P(E) = P(E|A)·prior + P(E|Aᶜ)·(1 − prior)`, y el posterior es `P(E|A)·prior / P(E)`. Con esto se ve cómo cambia la probabilidad de que un CVE sea crítico al conocer su vector de ataque (B) **o** sus privilegios (C), como pide la propuesta.
 
@@ -77,22 +79,22 @@ Este contrato es un punto de partida: se ajusta en la primera reunión y despué
 Tamaño: **S** pequeña, **M** mediana, **L** grande.
 
 ### Fase 1: base y mocks
-- [ ] **B1 (M) Módulo `stats/`:** definir eventos sobre un DataFrame (A: `baseScore` ≥ umbral; B: vector de red; C: sin privilegios), probabilidades, complemento, unión, intersección, independencia, condicional, probabilidad total y Bayes con prior editable, condicionando por B o por C. Separar **conteos → probabilidades** (funciones puras) de **DataFrame → conteos**, para probar directo con los números del informe.
-- [ ] **B2 (S) Binomial en `stats/`:** pmf, `P(X=k)`, `P(X≤k)`, `P(X≥k)`, `E`, `Var`, `n` mínimo para una confianza dada, y las advertencias. Pruebas (por ejemplo, `P(X≥3)` para Bin(20; 0,10) ≈ 0,3231).
-- [ ] **B3 (S) Endpoints con mocks:** todas las rutas del contrato con la forma final y modelos de entrada y salida en Pydantic. Los cálculos usan las funciones reales de `stats/` sobre los conteos hipotéticos del informe, así que en B7 solo cambia la fuente de datos. **Es lo primero que necesita el frontend.**
+- [x] **B1 (M) Módulo `stats/`:** definir eventos sobre un DataFrame (A: `baseScore` ≥ umbral; B: vector de red; C: sin privilegios), probabilidades, complemento, unión, intersección, independencia, condicional, probabilidad total y Bayes con prior editable, condicionando por B o por C. Separar **conteos → probabilidades** (funciones puras) de **DataFrame → conteos**, para probar directo con los números del informe.
+- [x] **B2 (S) Binomial en `stats/`:** pmf, `P(X=k)`, `P(X≤k)`, `P(X≥k)`, `E`, `Var`, `n` mínimo para una confianza dada, y las advertencias. Pruebas (por ejemplo, `P(X≥3)` para Bin(20; 0,10) ≈ 0,3231).
+- [x] **B3 (S) Endpoints con mocks:** todas las rutas del contrato con la forma final y modelos de entrada y salida en Pydantic. Los cálculos usan las funciones reales de `stats/` sobre los conteos hipotéticos del informe, así que en B7 solo cambia la fuente de datos. **Es lo primero que necesita el frontend.**
 
 ### Fase 2: datos de la NVD
-- [ ] **B4 (M) Cliente de la API (`nvd/`):** consulta con `pubStartDate`/`pubEndDate`, paginación (`startIndex`, `resultsPerPage` ≤ 2000), reintentos y respeto del límite de solicitudes, con la clave leída desde `.env`. La API acepta como máximo **120 días** entre `pubStartDate` y `pubEndDate`, así que un periodo más largo se parte en tramos. Límite: **5 solicitudes cada 30 s sin clave y 50 con clave**.
-- [ ] **B5 (M) Depuración:** excluir *Rejected* y CVE sin puntuación; **una puntuación por CVE** con prioridad v3.1 → v3.0 → v4.0 y, dentro de cada versión, la métrica **Primary** (de la NVD) antes que la **Secondary** (de la CNA); extraer `baseScore`, severidad, vector de ataque, privilegios, CWE y fecha. Reportar descargados, rechazados, sin puntuación y N.
-- [ ] **B6 (S) Almacenamiento:** guardar lo descargado en `data/` (CSV o parquet) y poder cargarlo desde ahí, para no depender de la API durante la demo. Carga por archivo CSV subido.
-- [ ] **B7 (M) Conectar la estadística con datos reales:** `/datos/*`, `/eventos`, `/reglas`, `/bayes` y `/binomial` dejan de usar mocks.
+- [x] **B4 (M) Cliente de la API (`nvd/`):** consulta con `pubStartDate`/`pubEndDate`, paginación (`startIndex`, `resultsPerPage` ≤ 2000), reintentos y respeto del límite de solicitudes, con la clave leída desde `.env`. La API acepta como máximo **120 días** entre `pubStartDate` y `pubEndDate`, así que un periodo más largo se parte en tramos. Límite: **5 solicitudes cada 30 s sin clave y 50 con clave**.
+- [x] **B5 (M) Depuración:** excluir *Rejected* y CVE sin puntuación; **una puntuación por CVE** con prioridad v3.1 → v3.0 → v4.0 y, dentro de cada versión, la métrica **Primary** (de la NVD) antes que la **Secondary** (de la CNA); extraer `baseScore`, severidad, vector de ataque, privilegios, CWE y fecha. Reportar descargados, rechazados, sin puntuación y N.
+- [x] **B6 (S) Almacenamiento:** guardar lo descargado en `data/` (CSV o parquet) y poder cargarlo desde ahí, para no depender de la API durante la demo. Carga por archivo CSV subido.
+- [x] **B7 (M) Conectar la estadística con datos reales:** `/datos/*`, `/eventos`, `/reglas`, `/bayes` y `/binomial` dejan de usar mocks.
 
 ### Fase 3: dashboard e integración
-- [ ] **B8 (M) Endpoints del dashboard:** conteos por severidad y vector, serie diaria, histograma con media, mediana y desviación, y top de CWE.
-- [ ] **B9 (S) Errores y validaciones:** mensajes claros (`P(B)=0`, `N=0`, rangos inválidos, API caída o con límite excedido) con códigos HTTP correctos.
-- [ ] **B10 (S) Descarga lenta:** si la consulta tarda mucho, devolver el progreso o permitir lanzarla aparte (por ejemplo, un script que descarga y guarda).
-- [ ] **B14 (S) Exportar resultados (RF7):** `GET /exportar/{tabla}` devuelve en CSV la tabla de CVE depurados y las de eventos, reglas, Bayes y binomial.
-- [ ] **B15 (S) Registro de ejecuciones:** guardar los parámetros de cada cálculo (periodo, criterios de los eventos, prior, `n`, `k`, `p`) con fecha y hora en `data/ejecuciones.jsonl`, y exponerlos en `GET /ejecuciones`, para que cada resultado sea reproducible (requisito no funcional de la propuesta).
+- [x] **B8 (M) Endpoints del dashboard:** conteos por severidad y vector, serie diaria, histograma con media, mediana y desviación, y top de CWE.
+- [x] **B9 (S) Errores y validaciones:** mensajes claros (`P(B)=0`, `N=0`, rangos inválidos, API caída o con límite excedido) con códigos HTTP correctos.
+- [x] **B10 (S) Descarga lenta:** si la consulta tarda mucho, devolver el progreso o permitir lanzarla aparte (por ejemplo, un script que descarga y guarda).
+- [x] **B14 (S) Exportar resultados (RF7):** `GET /exportar/{tabla}` devuelve en CSV la tabla de CVE depurados y las de eventos, reglas, Bayes y binomial.
+- [x] **B15 (S) Registro de ejecuciones:** guardar los parámetros de cada cálculo (periodo, criterios de los eventos, prior, `n`, `k`, `p`) con fecha y hora en `data/ejecuciones.jsonl`, y exponerlos en `GET /ejecuciones`, para que cada resultado sea reproducible (requisito no funcional de la propuesta).
 
 ### Fase 4: cierre
 - [ ] **B11 (S) Pruebas de API:** una prueba por endpoint; los cálculos comparados con el informe.

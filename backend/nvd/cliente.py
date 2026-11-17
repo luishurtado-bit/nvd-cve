@@ -1,5 +1,6 @@
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date
 from typing import Any, Protocol
 import requests
@@ -18,6 +19,13 @@ TIMEOUT = 60
 class ErrorNVD(Exception):
     """La API de la NVD no respondió bien después de los reintentos."""
 
+@dataclass(frozen=True)
+class Avance:
+    tramo: int  # 1, 2, …
+    n_tramos: int
+    descargados: int  # acumulado en todo el periodo
+    total_tramo: int  # totalResults del tramo actual
+
 class Respuesta(Protocol):
     status_code: int
     headers: Any
@@ -34,12 +42,17 @@ class ClienteNVD:
         dormir: Callable[[float], None] = time.sleep,
         max_reintentos: int = MAX_REINTENTOS,
         progreso: Callable[[str], None] | None = None,
+        al_avanzar: Callable[[Avance], None] | None = None,
     ) -> None:
         self.api_key = api_key
         self.sesion = sesion if sesion is not None else requests.Session()
         self.dormir = dormir
         self.max_reintentos = max_reintentos
         self.progreso = progreso
+        self.al_avanzar = al_avanzar
+        # Posición dentro de descargar(): tramo actual y CVE de tramos anteriores
+        self._tramo = (1, 1)
+        self._previos = 0
         self.espera = ESPERA_CON_CLAVE if api_key else ESPERA_SIN_CLAVE
         self.solicitudes = 0
 
@@ -94,6 +107,9 @@ class ClienteNVD:
             cves.extend(pagina)
             total = int(datos.get("totalResults", 0))
             self._avisar(f"{desde} a {hasta}: {len(cves)} de {total} CVE")
+            if self.al_avanzar is not None:
+                tramo, n_tramos = self._tramo
+                self.al_avanzar(Avance(tramo, n_tramos, self._previos + len(cves), total))
             inicio += len(pagina)
             # Sin más resultados o página vacía (evita un ciclo infinito)
             if inicio >= total or not pagina:
@@ -105,5 +121,6 @@ class ClienteNVD:
         tramos = partir_periodo(inicio, fin)
         for i, (desde, hasta) in enumerate(tramos, start=1):
             self._avisar(f"Tramo {i} de {len(tramos)}: {desde} a {hasta}")
+            self._tramo, self._previos = (i, len(tramos)), len(cves)
             cves.extend(self.descargar_tramo(desde, hasta))
         return cves

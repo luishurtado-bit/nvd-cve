@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 from pathlib import Path
 import pytest
-from api import estado
+from api import descargas, estado
 from api.main import app
 from api.rutas.datos import obtener_cliente
 from nvd.cliente import ClienteNVD
@@ -18,6 +18,7 @@ def aislar(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
     monkeypatch.setenv("DIR_DATOS", str(tmp_path / "data"))
     monkeypatch.delenv("NVD_API_KEY", raising=False)
     estado.reiniciar()
+    descargas.reiniciar()
     app.dependency_overrides[obtener_cliente] = lambda: ClienteNVD(
         sesion=SesionSinRed(), dormir=lambda _: None
     )

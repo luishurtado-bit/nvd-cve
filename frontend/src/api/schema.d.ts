@@ -33,10 +33,51 @@ export interface paths {
         /**
          * Cargar
          * @description Descarga de la API de la NVD los CVE publicados en el periodo, los guarda en
-         *     data/ y los deja como conjunto actual. Para periodos largos conviene el script
-         *     `python -m nvd.descargar`.
+         *     data/ y los deja como conjunto actual. Responde al terminar; para periodos
+         *     largos conviene POST /datos/descargas o el script `python -m nvd.descargar`.
          */
         post: operations["cargar_api_datos_cargar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datos/descargas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Iniciar Descarga
+         * @description Lanza la descarga en segundo plano y responde enseguida con su `id`.
+         *     El progreso se consulta con GET /datos/descargas/{id}. Solo una a la vez.
+         */
+        post: operations["iniciar_descarga_api_datos_descargas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/datos/descargas/{id_}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultar Descarga
+         * @description Progreso de una descarga: estado, tramo, CVE descargados y, al terminar, el resumen.
+         */
+        get: operations["consultar_descarga_api_datos_descargas__id___get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -255,6 +296,126 @@ export interface paths {
          * @description Los `top` CWE más frecuentes; `total` cuenta todos los CVE con CWE.
          */
         get: operations["cwe_api_dashboard_cwe_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exportar/cve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Cve
+         * @description CVE del espacio muestral Ω actual (ya depurados).
+         */
+        get: operations["exportar_cve_api_exportar_cve_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exportar/eventos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Eventos
+         * @description Conteo y probabilidad de A, B, C y sus intersecciones.
+         */
+        get: operations["exportar_eventos_api_exportar_eventos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exportar/reglas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Reglas
+         * @description Complemento, unión, intersección e independencia de X e Y.
+         */
+        get: operations["exportar_reglas_api_exportar_reglas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exportar/bayes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Bayes
+         * @description Probabilidad total y teorema de Bayes, paso a paso.
+         */
+        get: operations["exportar_bayes_api_exportar_bayes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exportar/binomial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Binomial
+         * @description Tabla de X ~ Bin(n, p): P(X = k), P(X ≤ k) y P(X ≥ k) para k = 0…n.
+         */
+        get: operations["exportar_binomial_api_exportar_binomial_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ejecuciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ejecuciones
+         * @description Últimos cálculos y cargas, con sus parámetros y los datos usados (más reciente primero).
+         */
+        get: operations["ejecuciones_api_ejecuciones_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -495,6 +656,53 @@ export interface components {
              */
             privilegios: "NONE" | "LOW" | "HIGH";
         };
+        /** DescargaOut */
+        DescargaOut: {
+            /** Id */
+            id: string;
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "en_curso" | "terminada" | "fallida";
+            periodo: components["schemas"]["Periodo"];
+            /**
+             * Tramo
+             * @description Tramo de 120 días en curso
+             */
+            tramo: number;
+            /** N Tramos */
+            n_tramos: number;
+            /**
+             * Descargados
+             * @description CVE descargados hasta ahora
+             */
+            descargados: number;
+            /**
+             * Total Tramo
+             * @description CVE del tramo en curso según la NVD
+             */
+            total_tramo: number;
+            /**
+             * Mensaje
+             * @description Último aviso de progreso
+             */
+            mensaje?: string | null;
+            /** @description Al terminar: el resumen de los datos */
+            resumen?: components["schemas"]["ResumenDatos"] | null;
+            /**
+             * Error
+             * @description Si falló: el motivo
+             */
+            error?: string | null;
+            /**
+             * Iniciada
+             * Format: date-time
+             */
+            iniciada: string;
+            /** Terminada */
+            terminada?: string | null;
+        };
         /** DistribucionOut */
         DistribucionOut: {
             /**
@@ -504,6 +712,33 @@ export interface components {
             total: number;
             /** Categorias */
             categorias: components["schemas"]["ConteoCategoria"][];
+        };
+        /** Ejecucion */
+        Ejecucion: {
+            /**
+             * Fecha
+             * Format: date-time
+             */
+            fecha: string;
+            /** Operacion */
+            operacion: string;
+            /**
+             * Origen
+             * @description Datos con los que se calculó
+             * @enum {string}
+             */
+            origen: "simulado" | "api" | "csv";
+            /** N */
+            N: number;
+            periodo: components["schemas"]["Periodo"];
+            /** Parametros */
+            parametros: {
+                [key: string]: unknown;
+            };
+            /** Resultado */
+            resultado: {
+                [key: string]: unknown;
+            };
         };
         /** EventosOut */
         EventosOut: {
@@ -757,6 +992,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResumenDatos"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    iniciar_descarga_api_datos_descargas_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CargarIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DescargaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    consultar_descarga_api_datos_descargas__id___get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id_: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DescargaOut"];
                 };
             };
             /** @description Validation Error */
@@ -1064,6 +1363,208 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DistribucionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exportar_cve_api_exportar_cve_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archivo CSV (UTF-8 con BOM, para Excel) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+        };
+    };
+    exportar_eventos_api_exportar_eventos_get: {
+        parameters: {
+            query?: {
+                /** @description A: baseScore ≥ umbral */
+                umbral?: number;
+                /** @description B: vector de ataque */
+                vector?: "NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL";
+                /** @description C: privilegios requeridos */
+                privilegios?: "NONE" | "LOW" | "HIGH";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archivo CSV (UTF-8 con BOM, para Excel) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exportar_reglas_api_exportar_reglas_get: {
+        parameters: {
+            query?: {
+                /** @description A: baseScore ≥ umbral */
+                umbral?: number;
+                /** @description B: vector de ataque */
+                vector?: "NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL";
+                /** @description C: privilegios requeridos */
+                privilegios?: "NONE" | "LOW" | "HIGH";
+                x?: "A" | "B" | "C";
+                y?: "A" | "B" | "C";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archivo CSV (UTF-8 con BOM, para Excel) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exportar_bayes_api_exportar_bayes_get: {
+        parameters: {
+            query?: {
+                /** @description A: baseScore ≥ umbral */
+                umbral?: number;
+                /** @description B: vector de ataque */
+                vector?: "NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL";
+                /** @description C: privilegios requeridos */
+                privilegios?: "NONE" | "LOW" | "HIGH";
+                condicionante?: "B" | "C";
+                prior?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archivo CSV (UTF-8 con BOM, para Excel) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exportar_binomial_api_exportar_binomial_get: {
+        parameters: {
+            query: {
+                /** @description A: baseScore ≥ umbral */
+                umbral?: number;
+                /** @description B: vector de ataque */
+                vector?: "NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL";
+                /** @description C: privilegios requeridos */
+                privilegios?: "NONE" | "LOW" | "HIGH";
+                n: number;
+                k?: number;
+                p?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archivo CSV (UTF-8 con BOM, para Excel) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ejecuciones_api_ejecuciones_get: {
+        parameters: {
+            query?: {
+                limite?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ejecucion"][];
                 };
             };
             /** @description Validation Error */

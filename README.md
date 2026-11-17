@@ -140,13 +140,20 @@ Mientras no se cargue ningún periodo, la API responde con los **datos simulados
 
    Parte el periodo en tramos de 120 días (límite de la NVD), pagina, respeta el límite de solicitudes y reintenta ante errores. Al terminar muestra descargados, rechazados, sin puntuación y N. Un trimestre son unos 16 000 CVE y tarda pocos minutos sin clave.
 
-2. **Desde la API:** `POST /api/datos/cargar` con `{"inicio": "AAAA-MM-DD", "fin": "AAAA-MM-DD"}`. La respuesta espera a que termine la descarga, así que conviene para periodos cortos.
+2. **Desde la API**, con el cuerpo `{"inicio": "AAAA-MM-DD", "fin": "AAAA-MM-DD"}`:
+   - `POST /api/datos/cargar` responde cuando termina la descarga. Sirve para periodos cortos y acepta hasta 366 días.
+   - `POST /api/datos/descargas` responde enseguida (`202`) con un `id` y descarga en segundo plano. El progreso (tramo, CVE descargados y, al final, el resumen) se consulta con `GET /api/datos/descargas/{id}`. Solo corre una descarga a la vez (`409` si ya hay otra).
 
 3. **Subiendo un CSV:** `POST /api/datos/archivo`. Sirve cualquier CSV guardado en `data/` o uno propio con al menos las columnas `cve_id`, `publicado`, `base_score`, `vector_ataque` y `privilegios` (opcionales: `estado`, `version_cvss`, `severidad`, `cwe`).
 
 Todo lo que se carga se guarda en `data/` (un CSV con lo descargado sin depurar y un JSON con el periodo y el origen). **Al arrancar, el backend retoma el último conjunto guardado**, así que la demo no depende de que la NVD esté disponible. Para volver a los datos simulados basta con mover o borrar los archivos de `data/` y reiniciar.
 
 La depuración (RF2) excluye los CVE *Rejected* y los que no tienen puntuación, y usa una sola puntuación por CVE: CVSS v3.1, luego v3.0 y luego v4.0, prefiriendo la métrica de la NVD (*Primary*) sobre la de la CNA (*Secondary*).
+
+## Exportar resultados y registro de ejecuciones
+
+- **Exportar a CSV (RF7):** `GET /api/exportar/{tabla}`, con `tabla` = `cve`, `eventos`, `reglas`, `bayes` o `binomial`. Recibe los mismos parámetros del cálculo por query string, así que se puede descargar con un enlace normal, por ejemplo `/api/exportar/binomial?n=20&p=0.1` o `/api/exportar/eventos?umbral=7`. Los archivos van en UTF-8 con BOM para que Excel muestre bien las tildes.
+- **Registro de ejecuciones:** cada carga y cada cálculo (`eventos`, `reglas`, `bayes`, `binomial`) se guarda en `data/ejecuciones.jsonl` con la fecha, los parámetros, el resultado y los datos usados (origen, N y periodo). Se consulta con `GET /api/ejecuciones?limite=50`.
 
 ## Pruebas y verificación
 

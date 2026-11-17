@@ -89,3 +89,11 @@ def test_progreso() -> None:
     c.descargar(DIA, DIA)
     assert mensajes[0].startswith("Tramo 1 de 1")
     assert "1 de 1 CVE" in mensajes[-1]
+
+def test_avance_estructurado() -> None:
+    from nvd.cliente import Avance
+    avances: list[Avance] = []
+    sesion = SesionFalsa(pagina(["1", "2"], 3), pagina(["3"], 3), pagina(["4"], 1))
+    c, _ = cliente(sesion, al_avanzar=avances.append)
+    c.descargar(date(2026, 1, 1), date(2026, 5, 1))  # 2 tramos
+    assert avances == [Avance(1, 2, 2, 3), Avance(1, 2, 3, 3), Avance(2, 2, 4, 1)]

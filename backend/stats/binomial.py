@@ -56,6 +56,17 @@ def tabla_pmf(n: int, p: float) -> list[float]:
     return [float(v) for v in binom.pmf(range(n + 1), n, p)]
 
 
+def tabla_acumulada(n: int, p: float) -> list[tuple[int, float, float, float]]:
+    """(k, P(X = k), P(X ≤ k), P(X ≥ k)) para k = 0, 1, …, n."""
+    _validar(n, p)
+    ks = range(n + 1)
+    return [
+        (k, float(igual), float(a_lo_sumo), float(al_menos))
+        for k, igual, a_lo_sumo, al_menos in zip(
+            ks, binom.pmf(ks, n, p), binom.cdf(ks, n, p), binom.sf([k - 1 for k in ks], n, p)
+        )
+    ]
+
 def n_minimo(p: float, confianza: float) -> int:
     """Menor n con P(X ≥ 1) = 1 − (1 − p)^n ≥ confianza.
 
