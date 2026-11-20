@@ -1,9 +1,38 @@
 import { useState, useEffect, type FormEvent, type ChangeEvent, type DragEvent } from "react";
-import { apiFrontB, type ResumenDatos } from "../api/cliente";
+import { apiFrontB, type ResumenDatos } from "@/api/cliente";
+import { Campo } from "@/components/campo";
+import { Formulario } from "@/components/formulario";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Progress, ProgressLabel } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface CargaDatosProps {
   onDatosActualizados?: (resumen: ResumenDatos) => void;
   onNotificar?: (mensaje: string) => void;
+}
+
+type Tono = "neutro" | "error" | "aviso" | "primario";
+
+const tonos: Record<Tono, { caja: string; texto: string }> = {
+  neutro: { caja: "border-border bg-muted", texto: "text-muted-foreground" },
+  error: { caja: "border-red-500/25 bg-red-500/10", texto: "text-red-500" },
+  aviso: { caja: "border-amber-500/25 bg-amber-500/10", texto: "text-amber-500" },
+  primario: { caja: "border-primary/35 bg-primary/10", texto: "text-primary" },
+};
+
+function Metrica({ etiqueta, valor, tono }: { etiqueta: string; valor: number; tono: Tono }) {
+  return (
+    <div className={cn("rounded-xl border p-3.5 text-center", tonos[tono].caja)}>
+      <div className={cn("text-sm font-medium", tonos[tono].texto)}>{etiqueta}</div>
+      <div className={cn("mt-1 text-2xl font-bold tabular-nums", tono !== "neutro" && tonos[tono].texto)}>
+        {valor}
+      </div>
+    </div>
+  );
 }
 
 export function CargaDatos({ onDatosActualizados, onNotificar }: CargaDatosProps) {
@@ -16,17 +45,19 @@ export function CargaDatos({ onDatosActualizados, onNotificar }: CargaDatosProps
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void cargarResumenInicial();
+    let activo = true;
+    apiFrontB
+      .obtenerResumen()
+      .then((data) => {
+        if (activo) setResumen(data);
+      })
+      .catch(() => {
+        // Aún no hay datos cargados
+      });
+    return () => {
+      activo = false;
+    };
   }, []);
-
-  const cargarResumenInicial = async () => {
-    try {
-      const data = await apiFrontB.obtenerResumen();
-      setResumen(data);
-    } catch {
-      // Aún no hay datos cargados
-    }
-  };
 
   const manejarCargaFechas = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -99,175 +130,134 @@ export function CargaDatos({ onDatosActualizados, onNotificar }: CargaDatosProps
       : 0;
 
   return (
-    <section className="panel-carga">
-      <h2>1. Carga y Depuración de Datos (NVD / CVE)</h2>
+    <section>
+      <h2 className="m-0 mb-4 text-xl font-bold tracking-tight">
+        1. Carga y Depuración de Datos (NVD / CVE)
+      </h2>
 
       {error && (
-        <div role="alert" style={{ background: "#fee2e2", color: "#991b1b", padding: "12px 16px", borderRadius: "10px", marginBottom: "16px", border: "1px solid #fecaca" }}>
-          <strong>Aviso:</strong> {error}
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>Aviso</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px", marginBottom: "24px" }}>
+      <div className="mb-6 grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
         {/* Opción A: Consulta por fechas */}
-        <form
-          onSubmit={manejarCargaFechas}
-          className="card-pro"
-          style={{
-            padding: "22px",
-            textAlign: "left",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <div>
-            <h3 style={{ marginTop: 0, marginBottom: "16px" }}>Consultar API NVD por Periodo</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-              <div>
-                <label htmlFor="fecha-inicio" style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, color: "var(--text-muted)", marginBottom: "6px" }}>
-                  Fecha de inicio
-                </label>
-                <input
-                  id="fecha-inicio"
-                  type="date"
-                  value={inicio}
-                  onChange={(e) => setInicio(e.target.value)}
-                  disabled={cargando}
-                  style={{ width: "100%" }}
-                  required
-                />
+        <Card>
+          <CardHeader>
+            <CardTitle>Consultar API NVD por Periodo</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col">
+            <Formulario onSubmit={manejarCargaFechas} className="flex-1 content-between">
+              <div className="grid grid-cols-2 gap-3">
+                <Campo etiqueta="Fecha de inicio" htmlFor="fecha-inicio">
+                  <Input
+                    id="fecha-inicio"
+                    type="date"
+                    value={inicio}
+                    onChange={(e) => setInicio(e.target.value)}
+                    disabled={cargando}
+                    required
+                  />
+                </Campo>
+                <Campo etiqueta="Fecha fin" htmlFor="fecha-fin">
+                  <Input
+                    id="fecha-fin"
+                    type="date"
+                    value={fin}
+                    onChange={(e) => setFin(e.target.value)}
+                    disabled={cargando}
+                    required
+                  />
+                </Campo>
               </div>
-              <div>
-                <label htmlFor="fecha-fin" style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, color: "var(--text-muted)", marginBottom: "6px" }}>
-                  Fecha fin
-                </label>
-                <input
-                  id="fecha-fin"
-                  type="date"
-                  value={fin}
-                  onChange={(e) => setFin(e.target.value)}
-                  disabled={cargando}
-                  style={{ width: "100%" }}
-                  required
-                />
-              </div>
-            </div>
-          </div>
-          <button type="submit" disabled={cargando}>
-            {cargando ? "Descargando..." : "Descargar de NVD"}
-          </button>
-        </form>
+              <Button type="submit" className="w-full" disabled={cargando}>
+                {cargando ? "Descargando..." : "Descargar de NVD"}
+              </Button>
+            </Formulario>
+          </CardContent>
+        </Card>
 
         {/* Opción B: Drag & Drop CSV */}
-        <form
-          onSubmit={manejarSubidaCsv}
-          className="card-pro"
-          style={{
-            padding: "22px",
-            textAlign: "left",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <div>
-            <h3 style={{ marginTop: 0, marginBottom: "12px" }}>Cargar desde Archivo CSV</h3>
-            <label
-              htmlFor="archivo-csv"
-              onDragOver={(e) => {
-                e.preventDefault();
-                setArrastrando(true);
-              }}
-              onDragLeave={() => setArrastrando(false)}
-              onDrop={manejarDrop}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "16px",
-                marginBottom: "14px",
-                borderRadius: "10px",
-                border: `2px dashed ${arrastrando ? "var(--primary)" : "var(--border-input)"}`,
-                background: arrastrando ? "rgba(59, 130, 246, 0.08)" : "var(--bg-subtle)",
-                cursor: "pointer",
-                textAlign: "center",
-                transition: "all 0.2s",
-              }}
-            >
-              <span style={{ fontSize: "0.88rem", fontWeight: 600 }}>
-                {archivo ? `📄 ${archivo.name}` : "Arrastra tu archivo .csv aquí o haz clic"}
-              </span>
-              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                Formato esperado: CVE depurados o exportados NVD
-              </span>
-              <input
-                id="archivo-csv"
-                type="file"
-                accept=".csv"
-                onChange={manejarArchivoChange}
-                disabled={cargando}
-                style={{ display: "none" }}
-              />
-            </label>
-          </div>
-          <button type="submit" disabled={cargando || !archivo}>
-            {cargando ? "Procesando CSV..." : "Subir CSV"}
-          </button>
-        </form>
+        <Card>
+          <CardHeader>
+            <CardTitle>Cargar desde Archivo CSV</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col">
+            <Formulario onSubmit={manejarSubidaCsv} className="flex-1 content-between">
+              <label
+                htmlFor="archivo-csv"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setArrastrando(true);
+                }}
+                onDragLeave={() => setArrastrando(false)}
+                onDrop={manejarDrop}
+                className={cn(
+                  "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center transition-colors",
+                  arrastrando ? "border-primary bg-primary/10" : "border-input bg-muted",
+                )}
+              >
+                <span className="text-sm font-semibold">
+                  {archivo ? `📄 ${archivo.name}` : "Arrastra tu archivo .csv aquí o haz clic"}
+                </span>
+                <span className="mt-1 text-xs text-muted-foreground">
+                  Formato esperado: CVE depurados o exportados NVD
+                </span>
+                <input
+                  id="archivo-csv"
+                  type="file"
+                  accept=".csv"
+                  onChange={manejarArchivoChange}
+                  disabled={cargando}
+                  className="hidden"
+                />
+              </label>
+              <Button type="submit" className="w-full" disabled={cargando || !archivo}>
+                {cargando ? "Procesando CSV..." : "Subir CSV"}
+              </Button>
+            </Formulario>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Resumen de depuración con barra de calidad */}
       {resumen && (
-        <div className="card-pro" style={{ padding: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
-            <h3 style={{ margin: 0 }}>Resumen del Conjunto Cargado</h3>
-            <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", background: "var(--bg-subtle)", padding: "4px 12px", borderRadius: "999px" }}>
-              Periodo: <strong>{resumen.periodo.inicio ?? "Sin fijar"}</strong> → <strong>{resumen.periodo.fin ?? "Sin fijar"}</strong>
-            </span>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Resumen del Conjunto Cargado</CardTitle>
+            <CardAction>
+              <Badge variant="secondary">
+                Periodo: <strong>{resumen.periodo.inicio ?? "Sin fijar"}</strong> →{" "}
+                <strong>{resumen.periodo.fin ?? "Sin fijar"}</strong>
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
+              <Metrica etiqueta="Descargados" valor={resumen.descargados} tono="neutro" />
+              <Metrica etiqueta="Rechazados" valor={resumen.rechazados} tono="error" />
+              <Metrica etiqueta="Sin puntuación" valor={resumen.sin_puntuacion} tono="aviso" />
+              <Metrica etiqueta="Espacio Muestral (N)" valor={resumen.N} tono="primario" />
+            </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "12px", textAlign: "center", marginBottom: "16px" }}>
-            <div style={{ background: "var(--bg-subtle)", padding: "14px", borderRadius: "10px", border: "1px solid var(--border-color)" }}>
-              <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 500 }}>Descargados</div>
-              <div style={{ fontSize: "1.6rem", fontWeight: 700, marginTop: "4px" }}>{resumen.descargados}</div>
-            </div>
-            <div style={{ background: "rgba(220, 38, 38, 0.08)", padding: "14px", borderRadius: "10px", border: "1px solid rgba(220, 38, 38, 0.25)" }}>
-              <div style={{ fontSize: "0.82rem", color: "#ef4444", fontWeight: 500 }}>Rechazados</div>
-              <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "#ef4444", marginTop: "4px" }}>{resumen.rechazados}</div>
-            </div>
-            <div style={{ background: "rgba(217, 119, 6, 0.08)", padding: "14px", borderRadius: "10px", border: "1px solid rgba(217, 119, 6, 0.25)" }}>
-              <div style={{ fontSize: "0.82rem", color: "#f59e0b", fontWeight: 500 }}>Sin puntuación</div>
-              <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "#f59e0b", marginTop: "4px" }}>{resumen.sin_puntuacion}</div>
-            </div>
-            <div style={{ background: "rgba(37, 99, 235, 0.1)", padding: "14px", borderRadius: "10px", border: "1px solid rgba(59, 130, 246, 0.35)" }}>
-              <div style={{ fontSize: "0.82rem", color: "var(--primary)", fontWeight: 600 }}>Espacio Muestral (N)</div>
-              <div style={{ fontSize: "1.6rem", fontWeight: 700, color: "var(--primary)", marginTop: "4px" }}>{resumen.N}</div>
-            </div>
-          </div>
-
-          {/* Barra de retención de depuración */}
-          {resumen.descargados > 0 && (
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "6px" }}>
-                <span>Tasa de retención tras depuración (N / Descargados)</span>
-                <strong>{porcentajeValido}% válidos para análisis</strong>
-              </div>
-              <div style={{ width: "100%", height: "8px", background: "var(--bg-subtle)", borderRadius: "999px", overflow: "hidden" }}>
-                <div
-                  style={{
-                    width: `${porcentajeValido}%`,
-                    height: "100%",
-                    background: "linear-gradient(90deg, #2563eb, #10b981)",
-                    borderRadius: "999px",
-                    transition: "width 0.5s ease",
-                  }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+            {/* Barra de retención de depuración */}
+            {resumen.descargados > 0 && (
+              <Progress
+                value={porcentajeValido}
+                className="gap-1.5 [&_[data-slot=progress-track]]:h-2"
+              >
+                <ProgressLabel className="text-xs font-normal text-muted-foreground">
+                  Tasa de retención tras depuración (N / Descargados)
+                </ProgressLabel>
+                <span className="ml-auto text-xs font-semibold text-muted-foreground">
+                  {porcentajeValido}% válidos para análisis
+                </span>
+              </Progress>
+            )}
+          </CardContent>
+        </Card>
       )}
     </section>
   );

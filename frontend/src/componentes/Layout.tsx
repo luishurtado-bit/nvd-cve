@@ -18,6 +18,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
+import { Toaster } from '@/components/ui/sonner'
 import { useTema } from '@/hooks/use-tema'
 import { cn } from '@/lib/utils'
 
@@ -103,6 +104,7 @@ export default function Layout() {
           <Outlet />
         </div>
       </SidebarInset>
+      <Toaster position="top-right" />
     </SidebarProvider>
   )
 }
