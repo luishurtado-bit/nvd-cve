@@ -7,7 +7,7 @@ interface Props {
 
 export default function GraficoPmf({ pmf, kElegido }: Props) {
   return (
-    <div style={{ width: '100%', maxWidth: '44rem', height: 320 }}>
+    <div className="h-80 w-full max-w-[44rem]">
       <ResponsiveContainer>
         <BarChart data={pmf} margin={{ top: 10, right: 20, bottom: 30, left: 10 }}>
           <CartesianGrid strokeDasharray="3 3" />
