@@ -20,6 +20,7 @@ import {
 import Cargando from "@/componentes/Cargando";
 import { Campo } from "@/components/campo";
 import { SelectOpciones } from "@/components/select-opciones";
+import { SelectorFecha } from "@/components/selector-fecha";
 import { TituloPagina } from "@/components/titulo-pagina";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -280,20 +281,10 @@ export function DashboardDescriptivo({ recargarTrigger, onNotificar }: Dashboard
             />
           </Campo>
           <Campo etiqueta="Fecha desde" htmlFor="filtro-desde">
-            <Input
-              id="filtro-desde"
-              type="date"
-              value={fechaDesde}
-              onChange={(e) => setFechaDesde(e.target.value)}
-            />
+            <SelectorFecha id="filtro-desde" valor={fechaDesde} onCambio={setFechaDesde} placeholder="dd/mm/aaaa" />
           </Campo>
           <Campo etiqueta="Fecha hasta" htmlFor="filtro-hasta">
-            <Input
-              id="filtro-hasta"
-              type="date"
-              value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
-            />
+            <SelectorFecha id="filtro-hasta" valor={fechaHasta} onCambio={setFechaHasta} placeholder="dd/mm/aaaa" />
           </Campo>
           <Campo etiqueta="Buscar CWE" htmlFor="buscar-cwe">
             <Input

@@ -2,12 +2,12 @@ import { useState, useEffect, type FormEvent, type ChangeEvent, type DragEvent }
 import { apiFrontB, type ResumenDatos } from "@/api/cliente";
 import { Campo } from "@/components/campo";
 import { Formulario } from "@/components/formulario";
+import { SelectorFecha } from "@/components/selector-fecha";
 import { TituloPagina } from "@/components/titulo-pagina";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Progress, ProgressLabel } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
@@ -153,23 +153,19 @@ export function CargaDatos({ onDatosActualizados, onNotificar }: CargaDatosProps
             <Formulario onSubmit={manejarCargaFechas} className="flex-1 content-between">
               <div className="grid grid-cols-2 gap-3">
                 <Campo etiqueta="Fecha de inicio" htmlFor="fecha-inicio">
-                  <Input
+                  <SelectorFecha
                     id="fecha-inicio"
-                    type="date"
-                    value={inicio}
-                    onChange={(e) => setInicio(e.target.value)}
+                    valor={inicio}
+                    onCambio={setInicio}
                     disabled={cargando}
-                    required
                   />
                 </Campo>
                 <Campo etiqueta="Fecha fin" htmlFor="fecha-fin">
-                  <Input
+                  <SelectorFecha
                     id="fecha-fin"
-                    type="date"
-                    value={fin}
-                    onChange={(e) => setFin(e.target.value)}
+                    valor={fin}
+                    onCambio={setFin}
                     disabled={cargando}
-                    required
                   />
                 </Campo>
               </div>
