@@ -3,7 +3,6 @@ import { apiFrontB, type ResumenDatos } from "@/api/cliente";
 import { Campo } from "@/components/campo";
 import { Formulario } from "@/components/formulario";
 import { SelectorFecha } from "@/components/selector-fecha";
-import { TituloPagina } from "@/components/titulo-pagina";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -132,10 +131,6 @@ export function CargaDatos({ onDatosActualizados, onNotificar }: CargaDatosProps
 
   return (
     <section>
-      <TituloPagina className="mb-4">
-        1. Carga y Depuración de Datos (NVD / CVE)
-      </TituloPagina>
-
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertTitle>Aviso</AlertTitle>

@@ -21,7 +21,6 @@ import Cargando from "@/componentes/Cargando";
 import { Campo } from "@/components/campo";
 import { SelectOpciones } from "@/components/select-opciones";
 import { SelectorFecha } from "@/components/selector-fecha";
-import { TituloPagina } from "@/components/titulo-pagina";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -234,9 +233,7 @@ export function DashboardDescriptivo({ recargarTrigger, onNotificar }: Dashboard
 
   return (
     <section className="mt-8">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <TituloPagina>2. Dashboard Descriptivo (Electiva III)</TituloPagina>
-
+      <div className="mb-5 flex flex-wrap items-center justify-end gap-3">
         <a
           href="/api/exportar/cve"
           download="cve_depurados.csv"
