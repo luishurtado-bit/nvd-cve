@@ -1,7 +1,9 @@
+import { Alert, AlertDescription } from '@/components/ui/alert'
+
 export default function MensajeError({ mensaje }: { mensaje: string }) {
   return (
-    <p role="alert" style={{ color: 'var(--error)' }}>
-      {mensaje}
-    </p>
+    <Alert variant="destructive">
+      <AlertDescription>{mensaje}</AlertDescription>
+    </Alert>
   )
 }
