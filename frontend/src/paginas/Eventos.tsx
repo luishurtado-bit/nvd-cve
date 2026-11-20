@@ -6,10 +6,10 @@ import MensajeError from '@/componentes/MensajeError'
 import { Campo } from '@/components/campo'
 import { DosColumnas } from '@/components/dos-columnas'
 import { Formulario } from '@/components/formulario'
+import { SelectOpciones } from '@/components/select-opciones'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 type Vector = NonNullable<CriteriosIn['vector']>
@@ -145,46 +145,15 @@ export default function Eventos() {
                     />
                   </Campo>
                   <Campo etiqueta="Vector de ataque (B)" htmlFor="vector">
-                    <Select
-                      items={vectores.map((v) => ({ value: v.valor, label: v.texto }))}
-                      value={vector}
-                      onValueChange={(valor) => {
-                        const op = vectores.find((v) => v.valor === valor)
-                        if (op) setVector(op.valor)
-                      }}
-                    >
-                      <SelectTrigger id="vector" className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vectores.map((v) => (
-                          <SelectItem key={v.valor} value={v.valor}>
-                            {v.texto}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SelectOpciones id="vector" opciones={vectores} valor={vector} onCambio={setVector} />
                   </Campo>
                   <Campo etiqueta="Privilegios requeridos (C)" htmlFor="privilegios">
-                    <Select
-                      items={privilegiosOpciones.map((p) => ({ value: p.valor, label: p.texto }))}
-                      value={privilegios}
-                      onValueChange={(valor) => {
-                        const op = privilegiosOpciones.find((p) => p.valor === valor)
-                        if (op) setPrivilegios(op.valor)
-                      }}
-                    >
-                      <SelectTrigger id="privilegios" className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {privilegiosOpciones.map((p) => (
-                          <SelectItem key={p.valor} value={p.valor}>
-                            {p.texto}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SelectOpciones
+                      id="privilegios"
+                      opciones={privilegiosOpciones}
+                      valor={privilegios}
+                      onCambio={setPrivilegios}
+                    />
                   </Campo>
                   <Button type="submit" className="w-full" disabled={cargando}>
                     Calcular eventos

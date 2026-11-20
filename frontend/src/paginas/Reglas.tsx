@@ -1,8 +1,17 @@
 import { useState } from 'react'
-import { api, ErrorApi } from '../api/cliente.ts'
-import type { CriteriosIn, ReglasOut } from '../api/tipos.ts'
-import Cargando from '../componentes/Cargando.tsx'
-import MensajeError from '../componentes/MensajeError.tsx'
+import { api, ErrorApi } from '@/api/cliente'
+import type { CriteriosIn, ReglasOut } from '@/api/tipos'
+import Cargando from '@/componentes/Cargando'
+import MensajeError from '@/componentes/MensajeError'
+import { Campo } from '@/components/campo'
+import { DosColumnas } from '@/components/dos-columnas'
+import { Formulario } from '@/components/formulario'
+import { SelectOpciones } from '@/components/select-opciones'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 type Evento = ReglasOut['x']
 type Vector = NonNullable<CriteriosIn['vector']>
@@ -70,184 +79,173 @@ export default function Reglas() {
     }
   }
 
-  const sel = (valor: Evento, set: (v: Evento) => void) => (
-    <select
-      value={valor}
-      onChange={(e) => {
-        const op = eventos.find((v) => v.valor === e.target.value)
-        if (op) set(op.valor)
-      }}
-    >
-      {eventos.map((v) => (
-        <option key={v.valor} value={v.valor}>
-          {v.texto}
-        </option>
-      ))}
-    </select>
-  )
-
   return (
     <section>
-      <h2>Reglas de probabilidad</h2>
+      <h2 className="m-0 mb-6 text-xl font-bold tracking-tight">Reglas de probabilidad</h2>
 
-      <p
-        role="note"
-        style={{
-          border: '1px solid var(--aviso-borde)',
-          background: 'var(--aviso-fondo)',
-          borderRadius: '8px',
-          padding: '0.75rem 1rem',
-          marginBottom: '1.5rem',
-        }}
-      >
-        <strong>Ojo:</strong> A y B pueden ser dependientes, porque la puntuación CVSS y
-        el vector de ataque están relacionados. No se asume independencia: se comprueba
-        comparando P(X ∩ Y) con P(X)·P(Y).
-      </p>
+      <Alert variant="warning" role="note" className="mb-6">
+        <AlertTitle>Ojo</AlertTitle>
+        <AlertDescription>
+          A y B pueden ser dependientes, porque la puntuación CVSS y el vector de ataque están
+          relacionados. No se asume independencia: se comprueba comparando P(X ∩ Y) con
+          P(X)·P(Y).
+        </AlertDescription>
+      </Alert>
 
-      <div className="dos-columnas">
-        {/* Columna izquierda: formulario */}
-        <div className="columna-formulario">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              void calcular()
-            }}
-            style={{ display: 'grid', gap: '0.75rem' }}
-          >
-            <label>Evento X {sel(x, setX)}</label>
-            <label>Evento Y {sel(y, setY)}</label>
-            <label>
-              Umbral de criticidad (A){' '}
-              <input
-                type="number"
-                min={0}
-                max={10}
-                step={0.1}
-                value={umbral}
-                onChange={(e) => setUmbral(e.target.value)}
-              />
-            </label>
-            <label>
-              Vector de ataque (B){' '}
-              <select
-                value={vector}
-                onChange={(e) => {
-                  const op = vectores.find((v) => v.valor === e.target.value)
-                  if (op) setVector(op.valor)
+      <DosColumnas
+        formulario={
+          <Card>
+            <CardHeader>
+              <CardTitle>Eventos y criterios</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Formulario
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  void calcular()
                 }}
               >
-                {vectores.map((v) => (
-                  <option key={v.valor} value={v.valor}>
-                    {v.texto}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Privilegios (C){' '}
-              <select
-                value={privilegios}
-                onChange={(e) => {
-                  const op = privilegiosOpciones.find((p) => p.valor === e.target.value)
-                  if (op) setPrivilegios(op.valor)
-                }}
-              >
-                {privilegiosOpciones.map((p) => (
-                  <option key={p.valor} value={p.valor}>
-                    {p.texto}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="submit" disabled={cargando}>
-              Calcular reglas
-            </button>
-          </form>
-        </div>
-
-        {/* Columna derecha: resultados */}
-        <div className="columna-resultados">
-          {!resultado && !cargando && !error && (
-            <p className="vacio">
-              Los resultados aparecerán aquí al pulsar «Calcular reglas».
-            </p>
-          )}
-          {cargando && <Cargando texto="Calculando…" />}
-          {error && <MensajeError mensaje={error} />}
-
-          {resultado && (
-            <>
-              <h3>
-                Resultados para {resultado.x} y {resultado.y}
-              </h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Regla</th>
-                    <th>Fórmula</th>
-                    <th>Valor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Complemento de {resultado.x}</td>
-                    <td>
-                      P({resultado.x}ᶜ) = 1 − P({resultado.x}) = 1 − {f(resultado.p_x)}
-                    </td>
-                    <td>{f(resultado.p_x_complemento)}</td>
-                  </tr>
-                  <tr>
-                    <td>Complemento de {resultado.y}</td>
-                    <td>
-                      P({resultado.y}ᶜ) = 1 − P({resultado.y}) = 1 − {f(resultado.p_y)}
-                    </td>
-                    <td>{f(resultado.p_y_complemento)}</td>
-                  </tr>
-                  <tr>
-                    <td>Intersección</td>
-                    <td>
-                      P({resultado.x} ∩ {resultado.y})
-                    </td>
-                    <td>{f(resultado.p_interseccion)}</td>
-                  </tr>
-                  <tr>
-                    <td>Unión</td>
-                    <td>
-                      P({resultado.x}) + P({resultado.y}) − P({resultado.x} ∩{' '}
-                      {resultado.y}) = {f(resultado.p_x)} + {f(resultado.p_y)} −{' '}
-                      {f(resultado.p_interseccion)}
-                    </td>
-                    <td>{f(resultado.p_union)}</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <h3>¿Son independientes?</h3>
-              <p>
-                Si fueran independientes, P({resultado.x} ∩ {resultado.y}) sería igual a
-                P({resultado.x})·P({resultado.y}).
+                <Campo etiqueta="Evento X" htmlFor="evento-x">
+                  <SelectOpciones id="evento-x" opciones={eventos} valor={x} onCambio={setX} />
+                </Campo>
+                <Campo etiqueta="Evento Y" htmlFor="evento-y">
+                  <SelectOpciones id="evento-y" opciones={eventos} valor={y} onCambio={setY} />
+                </Campo>
+                <Campo etiqueta="Umbral de criticidad (A)" htmlFor="umbral">
+                  <Input
+                    id="umbral"
+                    type="number"
+                    min={0}
+                    max={10}
+                    step={0.1}
+                    value={umbral}
+                    onChange={(e) => setUmbral(e.target.value)}
+                  />
+                </Campo>
+                <Campo etiqueta="Vector de ataque (B)" htmlFor="vector">
+                  <SelectOpciones
+                    id="vector"
+                    opciones={vectores}
+                    valor={vector}
+                    onCambio={setVector}
+                  />
+                </Campo>
+                <Campo etiqueta="Privilegios (C)" htmlFor="privilegios">
+                  <SelectOpciones
+                    id="privilegios"
+                    opciones={privilegiosOpciones}
+                    valor={privilegios}
+                    onCambio={setPrivilegios}
+                  />
+                </Campo>
+                <Button type="submit" className="w-full" disabled={cargando}>
+                  Calcular reglas
+                </Button>
+              </Formulario>
+            </CardContent>
+          </Card>
+        }
+        resultados={
+          <>
+            {!resultado && !cargando && !error && (
+              <p className="text-sm text-muted-foreground">
+                Los resultados aparecerán aquí al pulsar «Calcular reglas».
               </p>
-              <ul>
-                <li>
-                  P({resultado.x} ∩ {resultado.y}) = {f(resultado.p_interseccion)}
-                </li>
-                <li>
-                  P({resultado.x})·P({resultado.y}) = {f(resultado.producto)}
-                </li>
-              </ul>
-              <p>
-                <strong>
-                  {resultado.independientes
-                    ? `Los valores coinciden: ${resultado.x} y ${resultado.y} resultan independientes.`
-                    : `Los valores son distintos: ${resultado.x} y ${resultado.y} son dependientes.`}
-                </strong>
-              </p>
-              {resultado.nota && <p>{resultado.nota}</p>}
-            </>
-          )}
-        </div>
-      </div>
+            )}
+            {cargando && <Cargando texto="Calculando…" />}
+            {error && <MensajeError mensaje={error} />}
+
+            {resultado && (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      Resultados para {resultado.x} y {resultado.y}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Regla</TableHead>
+                          <TableHead>Fórmula</TableHead>
+                          <TableHead>Valor</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>Complemento de {resultado.x}</TableCell>
+                          <TableCell className="whitespace-normal">
+                            P({resultado.x}ᶜ) = 1 − P({resultado.x}) = 1 − {f(resultado.p_x)}
+                          </TableCell>
+                          <TableCell className="tabular-nums">
+                            {f(resultado.p_x_complemento)}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Complemento de {resultado.y}</TableCell>
+                          <TableCell className="whitespace-normal">
+                            P({resultado.y}ᶜ) = 1 − P({resultado.y}) = 1 − {f(resultado.p_y)}
+                          </TableCell>
+                          <TableCell className="tabular-nums">
+                            {f(resultado.p_y_complemento)}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Intersección</TableCell>
+                          <TableCell className="whitespace-normal">
+                            P({resultado.x} ∩ {resultado.y})
+                          </TableCell>
+                          <TableCell className="tabular-nums">
+                            {f(resultado.p_interseccion)}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>Unión</TableCell>
+                          <TableCell className="whitespace-normal">
+                            P({resultado.x}) + P({resultado.y}) − P({resultado.x} ∩{' '}
+                            {resultado.y}) = {f(resultado.p_x)} + {f(resultado.p_y)} −{' '}
+                            {f(resultado.p_interseccion)}
+                          </TableCell>
+                          <TableCell className="tabular-nums">{f(resultado.p_union)}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>¿Son independientes?</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid gap-3">
+                    <p className="m-0">
+                      Si fueran independientes, P({resultado.x} ∩ {resultado.y}) sería igual a
+                      P({resultado.x})·P({resultado.y}).
+                    </p>
+                    <ul className="m-0 grid list-disc gap-1 pl-5">
+                      <li>
+                        P({resultado.x} ∩ {resultado.y}) = {f(resultado.p_interseccion)}
+                      </li>
+                      <li>
+                        P({resultado.x})·P({resultado.y}) = {f(resultado.producto)}
+                      </li>
+                    </ul>
+                    <p className="m-0 font-semibold">
+                      {resultado.independientes
+                        ? `Los valores coinciden: ${resultado.x} y ${resultado.y} resultan independientes.`
+                        : `Los valores son distintos: ${resultado.x} y ${resultado.y} son dependientes.`}
+                    </p>
+                    {resultado.nota && (
+                      <p className="m-0 text-muted-foreground">{resultado.nota}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </>
+        }
+      />
     </section>
   )
 }
