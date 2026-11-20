@@ -95,10 +95,10 @@ export default function Layout() {
       </Sidebar>
 
       <SidebarInset>
-        {/* Barra superior solo en móvil, para abrir la sidebar */}
-        <div className="flex items-center gap-2 border-b px-4 py-2 md:hidden">
+        {/* Barra superior con el botón para abrir/cerrar la sidebar (Ctrl+B también la alterna) */}
+        <div className="flex items-center gap-2 border-b px-4 py-2">
           <SidebarTrigger />
-          <span className="text-sm font-semibold">NVD/CVE</span>
+          <span className="text-sm font-semibold md:hidden">NVD/CVE</span>
         </div>
         <div className="mx-auto w-full max-w-[90rem] p-6">
           <Outlet />
