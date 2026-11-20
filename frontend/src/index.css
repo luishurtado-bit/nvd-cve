@@ -33,7 +33,6 @@
   --sombra: var(--shadow-sm);
 
   /* Colores que antes estaban fijos */
-  --encabezado-fondo: #1e3a8a;
   --fila-par: #f9fafb;
   --error: #b91c1c;
   --aviso-fondo: #fffbeb;
@@ -60,7 +59,6 @@
 
   --color-principal-oscuro: #93c5fd;
   --color-principal-suave: #1e293b;
-  --encabezado-fondo: #020617;
   --fila-par: #0f172a;
   --error: #f87171;
   --aviso-fondo: #3a2a0a;
@@ -80,88 +78,7 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* ---------- Encabezado y menú ---------- */
-header {
-  background: var(--encabezado-fondo);
-  color: #fff;
-  padding: 1rem 1.5rem 0;
-}
-
-header h1 {
-  margin: 0 0 0.75rem;
-  font-size: 1.4rem;
-  font-weight: 600;
-}
-
-.encabezado-superior {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.encabezado-acciones {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.75rem;
-}
-
-header .boton-tema {
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-header .boton-tema:hover {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.estado-backend {
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.estado-backend.ok {
-  background: rgba(22, 163, 74, 0.2);
-  color: #86efac;
-}
-
-.estado-backend.error {
-  background: rgba(220, 38, 38, 0.2);
-  color: #fca5a5;
-}
-
-nav a {
-  color: #dbe5ff;
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radio) var(--radio) 0 0;
-}
-
-nav a:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-nav a.active {
-  background: var(--fondo);
-  color: var(--color-principal-oscuro);
-}
-
 /* ---------- Contenido ---------- */
-main {
-  max-width: 90rem;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
-
 h2 {
   font-size: 1.35rem;
   font-weight: 700;
@@ -209,8 +126,7 @@ select {
 
 input:focus,
 select:focus,
-button:focus-visible,
-nav a:focus-visible {
+button:focus-visible {
   outline: 2px solid var(--color-principal);
   outline-offset: 1px;
 }
