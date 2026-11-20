@@ -24,11 +24,21 @@ import { useTema } from '@/hooks/use-tema'
 import { cn } from '@/lib/utils'
 
 const enlaces = [
-  { ruta: '/datos', texto: 'Datos y dashboard', icono: Database },
-  { ruta: '/eventos', texto: 'Eventos', icono: Combine },
-  { ruta: '/reglas', texto: 'Reglas', icono: Scale },
-  { ruta: '/bayes', texto: 'Bayes', icono: Percent },
-  { ruta: '/binomial', texto: 'Binomial', icono: ChartColumn },
+  {
+    ruta: '/datos',
+    texto: 'Datos y dashboard',
+    titulo: 'Carga de datos y dashboard descriptivo',
+    icono: Database,
+  },
+  { ruta: '/eventos', texto: 'Eventos', titulo: 'Datos y eventos A, B y C', icono: Combine },
+  { ruta: '/reglas', texto: 'Reglas', titulo: 'Reglas de probabilidad', icono: Scale },
+  {
+    ruta: '/bayes',
+    texto: 'Bayes',
+    titulo: 'Probabilidad condicional y teorema de Bayes',
+    icono: Percent,
+  },
+  { ruta: '/binomial', texto: 'Binomial', titulo: 'Distribución binomial', icono: ChartColumn },
 ]
 
 type EstadoBackend = 'consultando…' | 'ok' | 'sin conexión'
@@ -36,6 +46,7 @@ type EstadoBackend = 'consultando…' | 'ok' | 'sin conexión'
 export default function Layout() {
   const { tema, alternar } = useTema()
   const { pathname } = useLocation()
+  const tituloPagina = enlaces.find((e) => pathname.startsWith(e.ruta))?.titulo ?? 'NVD/CVE'
   const [backend, setBackend] = useState<EstadoBackend>('consultando…')
 
   useEffect(() => {
@@ -121,7 +132,9 @@ export default function Layout() {
         {/* Barra superior con el botón para abrir/cerrar la sidebar (Ctrl+B también la alterna) */}
         <header className="sticky top-0 z-20 flex items-center gap-2 border-b bg-background px-4 py-2">
           <SidebarTrigger />
-          <span className="text-sm font-semibold md:hidden">NVD/CVE</span>
+          <h1 className="m-0 min-w-0 truncate text-base font-semibold tracking-tight text-blue-900 dark:text-blue-300">
+            {tituloPagina}
+          </h1>
           <Tooltip>
             <TooltipTrigger
               render={

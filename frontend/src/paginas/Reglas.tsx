@@ -7,7 +7,6 @@ import { Campo } from '@/components/campo'
 import { DosColumnas } from '@/components/dos-columnas'
 import { Formulario } from '@/components/formulario'
 import { SelectOpciones } from '@/components/select-opciones'
-import { TituloPagina } from '@/components/titulo-pagina'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -82,8 +81,6 @@ export default function Reglas() {
 
   return (
     <section>
-      <TituloPagina className="mb-6">Reglas de probabilidad</TituloPagina>
-
       <Alert variant="warning" role="note" className="mb-6">
         <AlertTitle>Ojo</AlertTitle>
         <AlertDescription>
