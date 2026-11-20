@@ -20,6 +20,7 @@ import {
 import Cargando from "@/componentes/Cargando";
 import { Campo } from "@/components/campo";
 import { SelectOpciones } from "@/components/select-opciones";
+import { TituloPagina } from "@/components/titulo-pagina";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -233,7 +234,7 @@ export function DashboardDescriptivo({ recargarTrigger, onNotificar }: Dashboard
   return (
     <section className="mt-8">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="m-0 text-xl font-bold tracking-tight">2. Dashboard Descriptivo (Electiva III)</h2>
+        <TituloPagina>2. Dashboard Descriptivo (Electiva III)</TituloPagina>
 
         <a
           href="/api/exportar/cve"
@@ -320,9 +321,9 @@ export function DashboardDescriptivo({ recargarTrigger, onNotificar }: Dashboard
         >
           <ResponsiveContainer>
             <BarChart data={categoriasSeveridadFiltradas}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-              <XAxis dataKey="categoria" stroke="var(--text-muted)" />
-              <YAxis stroke="var(--text-muted)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="categoria" stroke="var(--muted-foreground)" />
+              <YAxis stroke="var(--muted-foreground)" />
               <Tooltip content={<TooltipPro />} />
               <Bar dataKey="conteo" name="Cantidad CVE" radius={[6, 6, 0, 0]}>
                 {categoriasSeveridadFiltradas.map((entry) => (
@@ -342,9 +343,9 @@ export function DashboardDescriptivo({ recargarTrigger, onNotificar }: Dashboard
         >
           <ResponsiveContainer>
             <BarChart data={vector?.categorias ?? []} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-              <XAxis type="number" stroke="var(--text-muted)" />
-              <YAxis dataKey="categoria" type="category" width={130} stroke="var(--text-muted)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis type="number" stroke="var(--muted-foreground)" />
+              <YAxis dataKey="categoria" type="category" width={130} stroke="var(--muted-foreground)" />
               <Tooltip content={<TooltipPro />} />
               <Bar dataKey="conteo" name="Cantidad CVE" fill={COLOR_VECTOR} radius={[0, 6, 6, 0]} />
             </BarChart>
@@ -360,9 +361,9 @@ export function DashboardDescriptivo({ recargarTrigger, onNotificar }: Dashboard
         >
           <ResponsiveContainer>
             <BarChart data={datosHistograma}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-              <XAxis dataKey="rango" stroke="var(--text-muted)" />
-              <YAxis stroke="var(--text-muted)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="rango" stroke="var(--muted-foreground)" />
+              <YAxis stroke="var(--muted-foreground)" />
               <Tooltip content={<TooltipPro />} />
               <Bar dataKey="conteo" name="Frecuencia" fill={COLOR_HISTOGRAMA} radius={[6, 6, 0, 0]} />
             </BarChart>
@@ -378,9 +379,9 @@ export function DashboardDescriptivo({ recargarTrigger, onNotificar }: Dashboard
         >
           <ResponsiveContainer>
             <LineChart data={puntosSerieFiltrados}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-              <XAxis dataKey="fecha" stroke="var(--text-muted)" />
-              <YAxis stroke="var(--text-muted)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="fecha" stroke="var(--muted-foreground)" />
+              <YAxis stroke="var(--muted-foreground)" />
               <Tooltip content={<TooltipPro />} />
               <Line type="monotone" dataKey="conteo" name="CVEs por día" stroke={COLOR_SERIE} strokeWidth={2.5} dot={{ r: 3 }} />
             </LineChart>

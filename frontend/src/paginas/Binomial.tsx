@@ -8,6 +8,7 @@ import { Campo } from '@/components/campo'
 import { DosColumnas } from '@/components/dos-columnas'
 import { Formulario } from '@/components/formulario'
 import { SelectOpciones } from '@/components/select-opciones'
+import { TituloPagina } from '@/components/titulo-pagina'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -107,7 +108,7 @@ export default function Binomial() {
 
   return (
     <section>
-      <h2 className="m-0 mb-2 text-xl font-bold tracking-tight">Distribución binomial</h2>
+      <TituloPagina className="mb-2">Distribución binomial</TituloPagina>
       <p className="mb-6 mt-0 text-muted-foreground">
         X es el número de CVE críticos (evento A) en un lote de n CVE. Se modela como X ~ Bin(n,
         p), donde p es la probabilidad de que un CVE sea crítico.

@@ -7,6 +7,7 @@ import { Campo } from '@/components/campo'
 import { DosColumnas } from '@/components/dos-columnas'
 import { Formulario } from '@/components/formulario'
 import { SelectOpciones } from '@/components/select-opciones'
+import { TituloPagina } from '@/components/titulo-pagina'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -91,7 +92,7 @@ export default function Eventos() {
 
   return (
     <section>
-      <h2 className="m-0 mb-6 text-xl font-bold tracking-tight">Datos y eventos A, B y C</h2>
+      <TituloPagina className="mb-6">Datos y eventos A, B y C</TituloPagina>
 
       <DosColumnas
         formulario={

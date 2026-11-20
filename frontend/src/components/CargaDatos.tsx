@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent, type ChangeEvent, type DragEvent }
 import { apiFrontB, type ResumenDatos } from "@/api/cliente";
 import { Campo } from "@/components/campo";
 import { Formulario } from "@/components/formulario";
+import { TituloPagina } from "@/components/titulo-pagina";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -131,9 +132,9 @@ export function CargaDatos({ onDatosActualizados, onNotificar }: CargaDatosProps
 
   return (
     <section>
-      <h2 className="m-0 mb-4 text-xl font-bold tracking-tight">
+      <TituloPagina className="mb-4">
         1. Carga y Depuración de Datos (NVD / CVE)
-      </h2>
+      </TituloPagina>
 
       {error && (
         <Alert variant="destructive" className="mb-4">

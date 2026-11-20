@@ -7,6 +7,7 @@ import { Campo } from '@/components/campo'
 import { DosColumnas } from '@/components/dos-columnas'
 import { Formulario } from '@/components/formulario'
 import { SelectOpciones } from '@/components/select-opciones'
+import { TituloPagina } from '@/components/titulo-pagina'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -86,9 +87,9 @@ export default function Bayes() {
 
   return (
     <section>
-      <h2 className="m-0 mb-2 text-xl font-bold tracking-tight">
+      <TituloPagina className="mb-2">
         Probabilidad condicional y teorema de Bayes
-      </h2>
+      </TituloPagina>
       <p className="mb-6 mt-0 text-muted-foreground">
         Pregunta: si sabemos que ocurrió el evento E (B o C), ¿cuál es la probabilidad de que el
         CVE sea crítico (A)? El teorema de Bayes actualiza la probabilidad previa de A con esa
