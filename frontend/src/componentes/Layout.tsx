@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { ChartColumn, Combine, Database, Moon, Percent, Scale, Sun } from 'lucide-react'
+import { ChartColumn, Combine, Database, Moon, Percent, Scale, ShieldAlert, Sun } from 'lucide-react'
 import { api } from '@/api/cliente'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +18,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useTema } from '@/hooks/use-tema'
 import { cn } from '@/lib/utils'
 
@@ -46,10 +46,14 @@ export default function Layout() {
 
   return (
     <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="gap-1 p-4">
-          <span className="text-base font-semibold leading-tight">NVD/CVE</span>
-          <span className="text-xs text-muted-foreground">
+      <Sidebar collapsible="icon">
+        <SidebarHeader className="gap-1 p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-2">
+
+          <ShieldAlert className="hidden size-5 group-data-[collapsible=icon]:block" aria-label="NVD/CVE" />
+          <span className="text-base font-semibold leading-tight group-data-[collapsible=icon]:hidden">
+            NVD/CVE
+          </span>
+          <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
             Análisis estadístico de vulnerabilidades
           </span>
         </SidebarHeader>
@@ -62,6 +66,7 @@ export default function Layout() {
                   <SidebarMenuItem key={e.ruta}>
                     <SidebarMenuButton
                       isActive={pathname.startsWith(e.ruta)}
+                      tooltip={e.texto}
                       render={<Link to={e.ruta} />}
                     >
                       <e.icono />
@@ -74,8 +79,8 @@ export default function Layout() {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="gap-3 p-4">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <SidebarFooter className="gap-3 p-4 group-data-[collapsible=icon]:p-2">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
             <span>Backend</span>
             <Badge
               variant={backend === 'sin conexión' ? 'destructive' : 'secondary'}
@@ -87,10 +92,40 @@ export default function Layout() {
               {backend}
             </Badge>
           </div>
-          <Button type="button" variant="outline" onClick={alternar}>
-            {tema === 'dark' ? <Sun /> : <Moon />}
-            {tema === 'dark' ? 'Modo claro' : 'Modo oscuro'}
-          </Button>
+
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <div
+                  className="hidden items-center justify-center py-1 group-data-[collapsible=icon]:flex"
+                  aria-label={`Backend: ${backend}`}
+                />
+              }
+            >
+              <span
+                className={cn(
+                  'size-2.5 rounded-full',
+                  backend === 'ok' && 'bg-green-600 dark:bg-green-500',
+                  backend === 'sin conexión' && 'bg-destructive',
+                  backend === 'consultando…' && 'bg-muted-foreground',
+                )}
+              />
+            </TooltipTrigger>
+            <TooltipContent side="right">Backend: {backend}</TooltipContent>
+          </Tooltip>
+
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={alternar}
+                tooltip={tema === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+                className="border"
+              >
+                {tema === 'dark' ? <Sun /> : <Moon />}
+                <span>{tema === 'dark' ? 'Modo claro' : 'Modo oscuro'}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
 
