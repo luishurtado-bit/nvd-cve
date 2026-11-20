@@ -345,7 +345,7 @@ export function DashboardDescriptivo({ recargarTrigger, onNotificar }: Dashboard
             <BarChart data={vector?.categorias ?? []} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis type="number" stroke="var(--muted-foreground)" />
-              <YAxis dataKey="categoria" type="category" width={130} stroke="var(--muted-foreground)" />
+              <YAxis dataKey="categoria" type="category" width={170} stroke="var(--muted-foreground)" />
               <Tooltip content={<TooltipPro />} />
               <Bar dataKey="conteo" name="Cantidad CVE" fill={COLOR_VECTOR} radius={[0, 6, 6, 0]} />
             </BarChart>
