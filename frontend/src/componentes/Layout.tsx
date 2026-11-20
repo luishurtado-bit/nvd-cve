@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { ChartColumn, Combine, Database, Moon, Percent, Scale, ShieldAlert, Sun } from 'lucide-react'
 import { api } from '@/api/cliente'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Sidebar,
   SidebarContent,
@@ -113,28 +114,34 @@ export default function Layout() {
             </TooltipTrigger>
             <TooltipContent side="right">Backend: {backend}</TooltipContent>
           </Tooltip>
-
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={alternar}
-                tooltip={tema === 'dark' ? 'Modo claro' : 'Modo oscuro'}
-                className="border"
-              >
-                {tema === 'dark' ? <Sun /> : <Moon />}
-                <span>{tema === 'dark' ? 'Modo claro' : 'Modo oscuro'}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
 
       <SidebarInset>
         {/* Barra superior con el botón para abrir/cerrar la sidebar (Ctrl+B también la alterna) */}
-        <div className="flex items-center gap-2 border-b px-4 py-2">
+        <header className="sticky top-0 z-20 flex items-center gap-2 border-b bg-background px-4 py-2">
           <SidebarTrigger />
           <span className="text-sm font-semibold md:hidden">NVD/CVE</span>
-        </div>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="ml-auto"
+                  onClick={alternar}
+                  aria-label={tema === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+                />
+              }
+            >
+              {tema === 'dark' ? <Sun /> : <Moon />}
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {tema === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            </TooltipContent>
+          </Tooltip>
+        </header>
         <div className="mx-auto w-full max-w-[90rem] p-6">
           <Outlet />
         </div>
