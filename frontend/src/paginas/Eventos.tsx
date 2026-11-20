@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react'
-import { api, ErrorApi } from '../api/cliente.ts'
-import type { CriteriosIn, EventosOut, ResumenDatos } from '../api/tipos.ts'
-import Cargando from '../componentes/Cargando.tsx'
-import MensajeError from '../componentes/MensajeError.tsx'
+import { api, ErrorApi } from '@/api/cliente'
+import type { CriteriosIn, EventosOut, ResumenDatos } from '@/api/tipos'
+import Cargando from '@/componentes/Cargando'
+import MensajeError from '@/componentes/MensajeError'
+import { Campo } from '@/components/campo'
+import { DosColumnas } from '@/components/dos-columnas'
+import { Formulario } from '@/components/formulario'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 type Vector = NonNullable<CriteriosIn['vector']>
 type Privilegios = NonNullable<CriteriosIn['privilegios']>
@@ -83,128 +91,173 @@ export default function Eventos() {
 
   return (
     <section>
-      <h2>Datos y eventos A, B y C</h2>
+      <h2 className="m-0 mb-6 text-xl font-bold tracking-tight">Datos y eventos A, B y C</h2>
 
-      <div className="dos-columnas">
-        {/* Columna izquierda: resumen y formulario */}
-        <div className="columna-formulario">
-          <h3>Resumen de los datos</h3>
-          {errorResumen && <MensajeError mensaje={errorResumen} />}
-          {!resumen && !errorResumen && <Cargando />}
-          {resumen && (
-            <ul>
-              <li>
-                Periodo:{' '}
-                {resumen.periodo.inicio && resumen.periodo.fin
-                  ? `${resumen.periodo.inicio} a ${resumen.periodo.fin}`
-                  : 'sin fijar'}
-              </li>
-              <li>CVE descargados: {resumen.descargados}</li>
-              <li>Rechazados (Rejected): {resumen.rechazados}</li>
-              <li>Sin puntuación CVSS: {resumen.sin_puntuacion}</li>
-              <li>
-                <strong>N (espacio muestral Ω): {resumen.N}</strong>
-              </li>
-            </ul>
-          )}
+      <DosColumnas
+        formulario={
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle>Resumen de los datos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {errorResumen && <MensajeError mensaje={errorResumen} />}
+                {!resumen && !errorResumen && <Cargando />}
+                {resumen && (
+                  <dl className="m-0 grid gap-1.5">
+                    <FilaResumen
+                      etiqueta="Periodo"
+                      valor={
+                        resumen.periodo.inicio && resumen.periodo.fin
+                          ? `${resumen.periodo.inicio} a ${resumen.periodo.fin}`
+                          : 'sin fijar'
+                      }
+                    />
+                    <FilaResumen etiqueta="CVE descargados" valor={resumen.descargados} />
+                    <FilaResumen etiqueta="Rechazados (Rejected)" valor={resumen.rechazados} />
+                    <FilaResumen etiqueta="Sin puntuación CVSS" valor={resumen.sin_puntuacion} />
+                    <FilaResumen etiqueta="N (espacio muestral Ω)" valor={resumen.N} destacado />
+                  </dl>
+                )}
+              </CardContent>
+            </Card>
 
-          <h3>Definición de los eventos</h3>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              void calcular()
-            }}
-            style={{ display: 'grid', gap: '0.75rem' }}
-          >
-            <label>
-              Umbral de criticidad (A: baseScore ≥ umbral){' '}
-              <input
-                type="number"
-                min={0}
-                max={10}
-                step={0.1}
-                value={umbral}
-                onChange={(e) => setUmbral(e.target.value)}
-              />
-            </label>
-            <label>
-              Vector de ataque (B){' '}
-              <select
-                value={vector}
-                onChange={(e) => {
-                  const op = vectores.find((v) => v.valor === e.target.value)
-                  if (op) setVector(op.valor)
-                }}
-              >
-                {vectores.map((v) => (
-                  <option key={v.valor} value={v.valor}>
-                    {v.texto}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Privilegios requeridos (C){' '}
-              <select
-                value={privilegios}
-                onChange={(e) => {
-                  const op = privilegiosOpciones.find((p) => p.valor === e.target.value)
-                  if (op) setPrivilegios(op.valor)
-                }}
-              >
-                {privilegiosOpciones.map((p) => (
-                  <option key={p.valor} value={p.valor}>
-                    {p.texto}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="submit" disabled={cargando}>
-              Calcular eventos
-            </button>
-          </form>
-        </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Definición de los eventos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Formulario
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    void calcular()
+                  }}
+                >
+                  <Campo etiqueta="Umbral de criticidad (A: baseScore ≥ umbral)" htmlFor="umbral">
+                    <Input
+                      id="umbral"
+                      type="number"
+                      min={0}
+                      max={10}
+                      step={0.1}
+                      value={umbral}
+                      onChange={(e) => setUmbral(e.target.value)}
+                    />
+                  </Campo>
+                  <Campo etiqueta="Vector de ataque (B)" htmlFor="vector">
+                    <Select
+                      items={vectores.map((v) => ({ value: v.valor, label: v.texto }))}
+                      value={vector}
+                      onValueChange={(valor) => {
+                        const op = vectores.find((v) => v.valor === valor)
+                        if (op) setVector(op.valor)
+                      }}
+                    >
+                      <SelectTrigger id="vector" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vectores.map((v) => (
+                          <SelectItem key={v.valor} value={v.valor}>
+                            {v.texto}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Campo>
+                  <Campo etiqueta="Privilegios requeridos (C)" htmlFor="privilegios">
+                    <Select
+                      items={privilegiosOpciones.map((p) => ({ value: p.valor, label: p.texto }))}
+                      value={privilegios}
+                      onValueChange={(valor) => {
+                        const op = privilegiosOpciones.find((p) => p.valor === valor)
+                        if (op) setPrivilegios(op.valor)
+                      }}
+                    >
+                      <SelectTrigger id="privilegios" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {privilegiosOpciones.map((p) => (
+                          <SelectItem key={p.valor} value={p.valor}>
+                            {p.texto}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Campo>
+                  <Button type="submit" className="w-full" disabled={cargando}>
+                    Calcular eventos
+                  </Button>
+                </Formulario>
+              </CardContent>
+            </Card>
+          </>
+        }
+        resultados={
+          <>
+            {!resultado && !cargando && !error && (
+              <p className="text-sm text-muted-foreground">
+                Los resultados aparecerán aquí al pulsar «Calcular eventos».
+              </p>
+            )}
+            {cargando && <Cargando texto="Calculando…" />}
+            {error && <MensajeError mensaje={error} />}
 
-        {/* Columna derecha: resultados */}
-        <div className="columna-resultados">
-          {!resultado && !cargando && !error && (
-            <p className="vacio">
-              Los resultados aparecerán aquí al pulsar «Calcular eventos».
-            </p>
-          )}
-          {cargando && <Cargando texto="Calculando…" />}
-          {error && <MensajeError mensaje={error} />}
-
-          {resultado && (
-            <>
-              <h3>Resultados (N = {resultado.N})</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Evento</th>
-                    <th>Conteo</th>
-                    <th>Probabilidad</th>
-                    <th>Porcentaje</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filas.map((f) => {
-                    const dato = resultado.eventos[f.clave]
-                    return (
-                      <tr key={f.clave}>
-                        <td>{f.evento}</td>
-                        <td>{dato.conteo}</td>
-                        <td>{dato.probabilidad.toFixed(4)}</td>
-                        <td>{(dato.probabilidad * 100).toFixed(2)} %</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </>
-          )}
-        </div>
-      </div>
+            {resultado && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Resultados (N = {resultado.N})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Evento</TableHead>
+                        <TableHead>Conteo</TableHead>
+                        <TableHead>Probabilidad</TableHead>
+                        <TableHead>Porcentaje</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filas.map((f) => {
+                        const dato = resultado.eventos[f.clave]
+                        return (
+                          <TableRow key={f.clave}>
+                            <TableCell>{f.evento}</TableCell>
+                            <TableCell className="tabular-nums">{dato.conteo}</TableCell>
+                            <TableCell className="tabular-nums">{dato.probabilidad.toFixed(4)}</TableCell>
+                            <TableCell className="tabular-nums">
+                              {(dato.probabilidad * 100).toFixed(2)} %
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        }
+      />
     </section>
+  )
+}
+
+function FilaResumen({
+  etiqueta,
+  valor,
+  destacado = false,
+}: {
+  etiqueta: string
+  valor: string | number
+  destacado?: boolean
+}) {
+  return (
+    <div className={`flex justify-between gap-4 ${destacado ? 'font-semibold' : ''}`}>
+      <dt className={destacado ? '' : 'text-muted-foreground'}>{etiqueta}</dt>
+      <dd className="m-0 tabular-nums">{valor}</dd>
+    </div>
   )
 }
