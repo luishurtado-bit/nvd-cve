@@ -31,11 +31,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: {e}")
         return 1
     ruta = almacen.guardar(df, args.inicio, args.fin, "api")
-    _, conteo = depurar(df)
+    conteo = depurar(df).conteo
     print(f"Guardado en {ruta}")
     print(
         f"Descargados: {conteo.descargados} | Rechazados: {conteo.rechazados} | "
-        f"Sin puntuación: {conteo.sin_puntuacion} | N: {conteo.N}"
+        f"Duplicados: {conteo.duplicados} | Sin puntuación: {conteo.sin_puntuacion} | "
+        f"Formato inválido: {conteo.formato_invalido} | N: {conteo.N}"
     )
     return 0
 

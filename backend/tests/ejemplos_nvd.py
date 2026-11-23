@@ -44,18 +44,62 @@ def metrica(
     privilegios: str = "NONE",
     tipo: str = "Primary",
     severidad: str | None = None,
+    complejidad: str = "LOW",
+    interaccion: str = "NONE",
+    impactos: tuple[str, str, str] = ("HIGH", "HIGH", "HIGH"),
+    explotabilidad: float | None = 3.9,
+    impacto: float | None = 5.9,
 ) -> dict:
+    """Métrica CVSS v3.x: trae `exploitabilityScore` e `impactScore` junto a `cvssData`."""
     datos: dict = {
         "baseScore": puntuacion,
         "attackVector": vector,
+        "attackComplexity": complejidad,
         "privilegesRequired": privilegios,
+        "userInteraction": interaccion,
+        "confidentialityImpact": impactos[0],
+        "integrityImpact": impactos[1],
+        "availabilityImpact": impactos[2],
     }
     if severidad != "":
         datos["baseSeverity"] = severidad or severidad_cvss(puntuacion)
-    return {
+    m: dict = {
         "source": "nvd@nist.gov" if tipo == "Primary" else "cna@example.com",
         "type": tipo,
         "cvssData": datos,
+    }
+    if explotabilidad is not None:
+        m["exploitabilityScore"] = explotabilidad
+    if impacto is not None:
+        m["impactScore"] = impacto
+    return m
+
+def metrica_v4(
+    puntuacion: float,
+    vector: str = "NETWORK",
+    privilegios: str = "NONE",
+    tipo: str = "Secondary",
+    complejidad: str = "LOW",
+    interaccion: str = "NONE",
+    impactos: tuple[str, str, str] = ("HIGH", "HIGH", "HIGH"),
+) -> dict:
+    """Métrica CVSS v4.0: el impacto va en las claves `vuln…` y no trae puntajes de
+    explotabilidad ni de impacto. La interacción es NONE, PASSIVE o ACTIVE."""
+    return {
+        "source": "cna@example.com" if tipo == "Secondary" else "nvd@nist.gov",
+        "type": tipo,
+        "cvssData": {
+            "baseScore": puntuacion,
+            "baseSeverity": severidad_cvss(puntuacion),
+            "attackVector": vector,
+            "attackComplexity": complejidad,
+            "privilegesRequired": privilegios,
+            "userInteraction": interaccion,
+            "vulnConfidentialityImpact": impactos[0],
+            "vulnIntegrityImpact": impactos[1],
+            "vulnAvailabilityImpact": impactos[2],
+            "subConfidentialityImpact": "NONE",
+        },
     }
 
 def cve(
@@ -64,16 +108,28 @@ def cve(
     estado: str = "Analyzed",
     metricas: dict | None = None,
     cwes: list[str] | None = None,
+    fuente: str | None = None,
+    n_referencias: int = 0,
+    kev: bool = False,
+    modificado: str | None = None,
 ) -> dict:
     debilidades = (
         [{"source": "nvd@nist.gov", "type": "Primary", "description": [{"lang": "en", "value": c} for c in cwes]}]
         if cwes
         else []
     )
-    return {
+    objeto: dict = {
         "id": id_,
         "published": publicado,
         "vulnStatus": estado,
         "metrics": metricas or {},
         "weaknesses": debilidades,
+        "references": [{"url": f"https://ejemplo.org/{i}"} for i in range(n_referencias)],
     }
+    if fuente is not None:
+        objeto["sourceIdentifier"] = fuente
+    if modificado is not None:
+        objeto["lastModified"] = modificado
+    if kev:
+        objeto["cisaExploitAdd"] = "2026-11-02"
+    return objeto

@@ -24,14 +24,17 @@ def establecer(
 ) -> Conjunto:
     """Depura lo descargado y lo deja como conjunto actual."""
     global _actual
-    omega, conteo = depurar(crudo)
+    depuracion = depurar(crudo)
+    conteo = depuracion.conteo
     _actual = Conjunto(
-        omega=omega,
+        omega=depuracion.omega,
         resumen=ResumenDatos(
             periodo=Periodo(inicio=inicio, fin=fin),
             descargados=conteo.descargados,
             rechazados=conteo.rechazados,
+            duplicados=conteo.duplicados,
             sin_puntuacion=conteo.sin_puntuacion,
+            formato_invalido=conteo.formato_invalido,
             N=conteo.N,
             origen=origen,
         ),

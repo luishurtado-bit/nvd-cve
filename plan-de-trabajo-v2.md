@@ -149,7 +149,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 
 ### Fase 5: obtención y limpieza con la lógica del notebook
 
-**B16 (M) Extraer las 20 variables.**
+**[x] B16 (M) Extraer las 20 variables.**
 - **Qué:** llevar al backend lo que hacen las celdas 7–8 del notebook. Columnas nuevas:
   - `complejidad_ataque`, `interaccion_usuario`;
   - `impacto_confidencialidad`, `impacto_integridad`, `impacto_disponibilidad`;
@@ -162,7 +162,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 - **Listo cuando:** cada columna nueva tiene una prueba con un CVE de ejemplo v3.1 y otro v4.0.
 - **El frontend lo nota en:** el diccionario de variables (FB7) y la exportación `/api/exportar/cve`.
 
-**B17 (M) Depuración por pasos, con su justificación.**
+**[x] B17 (M) Depuración por pasos, con su justificación.**
 - **Qué:** `depurar()` devuelve, además de los datos, una lista de pasos `PasoDepuracion{paso, descripcion, antes, despues, eliminados, justificacion}`, en el orden del notebook:
 
   | Paso | Qué hace |
@@ -180,7 +180,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 - **Necesita:** B16.
 - **Listo cuando:** hay una prueba por paso y la conciliación cuadra.
 
-**B18 (S) Atípicos.**
+**[x] B18 (S) Atípicos.**
 - **Qué:** con el método IQR se **marcan, sin eliminarlos**, los atípicos de `n_referencias` y del volumen diario. Son datos reales y quitarlos sesgaría las proporciones. `base_score` va de 0 a 10, así que no tiene atípicos; eso se deja documentado.
 - **Dónde:** `backend/stats/descriptiva.py` (`atipicos_iqr`).
 - **Necesita:** B16.
@@ -410,7 +410,7 @@ Además:
 | Ruta | Cambio | Tarea | Lo usa | ¿Hay que regenerar los tipos? |
 |---|---|---|---|---|
 | `GET /api/datos/calidad` | Nueva | B19 | Front B (FB7) | Sí |
-| `GET /api/datos/resumen` | Gana `duplicados`, `formato_invalido` y `fecha_consulta` | B19 | Los dos (FG1) | Sí |
+| `GET /api/datos/resumen` | Gana `duplicados` y `formato_invalido` (ya, con B17) y `fecha_consulta` (B19). ⚠ `descargados` ahora cuenta las filas crudas, con duplicados | B17, B19 | Los dos (FG1) | Sí |
 | `GET /api/exportar/crudo`, `/calidad` | Nuevas (CSV/JSON) | B19 | Front B | No |
 | `GET /api/dashboard/*` | Aceptan `desde`, `hasta`, `severidad`, `vector` y `privilegios` | B21 | Front B (FB8) | Sí |
 | `GET /api/dashboard/kpis`, `/critico-por`, `/cruce`, `/privilegios`, `/fuentes` | Nuevas | B23, B24 | Front B (FB6, FB8) | Sí |

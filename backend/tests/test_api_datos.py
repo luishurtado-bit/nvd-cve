@@ -11,7 +11,7 @@ from tests.ejemplos_nvd import RespuestaFalsa, SesionFalsa, cve, metrica, pagina
 
 client = TestClient(app)
 
-CAMPOS = {"periodo", "descargados", "rechazados", "sin_puntuacion", "N", "origen"}
+CAMPOS = {"periodo", "descargados", "rechazados", "duplicados", "sin_puntuacion", "formato_invalido", "N", "origen"}
 PERIODO = {"inicio": "2026-11-01", "fin": "2026-11-02"}
 
 # 4 descargados: 1 rechazado, 1 sin puntuación, N = 2 (1 crítico de red, 1 local)
@@ -39,8 +39,9 @@ def _nvd_falsa(*respuestas: RespuestaFalsa) -> SesionFalsa:
 def _revisar_resumen(cuerpo: dict) -> None:
     assert set(cuerpo) == CAMPOS
     assert set(cuerpo["periodo"]) == {"inicio", "fin"}
-    # Ω = descargados − rechazados − sin puntuación
-    assert cuerpo["N"] == cuerpo["descargados"] - cuerpo["rechazados"] - cuerpo["sin_puntuacion"]
+    # Ω = descargados − rechazados − duplicados − sin puntuación − formato inválido
+    eliminados = cuerpo["rechazados"] + cuerpo["duplicados"] + cuerpo["sin_puntuacion"] + cuerpo["formato_invalido"]
+    assert cuerpo["N"] == cuerpo["descargados"] - eliminados
 
 def _subir(contenido: bytes, nombre: str = "cves.csv") -> dict:
     r = client.post("/api/datos/archivo", files={"archivo": (nombre, contenido, "text/csv")})
@@ -66,12 +67,21 @@ def test_cargar_desde_la_nvd() -> None:
     c = r.json()
     _revisar_resumen(c)
     assert (c["descargados"], c["rechazados"], c["sin_puntuacion"], c["N"]) == (4, 1, 1, 2)
+    assert (c["duplicados"], c["formato_invalido"]) == (0, 0)
     assert c["origen"] == "api"
     assert c["periodo"] == PERIODO
+
     assert sesion.llamadas[0]["params"]["pubStartDate"] == "2026-11-01T00:00:00.000"
     # Queda como conjunto actual y guardado en data/
     assert client.get("/api/datos/resumen").json() == c
     assert almacen.ultimo() is not None
+
+def test_cargar_cuenta_los_duplicados_y_cuadra() -> None:
+    repetido = [*CVES, cve("CVE-1", "2026-11-01T10:00:00.000", metricas={"cvssMetricV31": [metrica(9.8)]})]
+    _nvd_falsa(pagina(repetido))
+    c = client.post("/api/datos/cargar", json=PERIODO).json()
+    _revisar_resumen(c)
+    assert (c["descargados"], c["duplicados"], c["N"]) == (5, 1, 2)
 
 def test_los_calculos_usan_los_datos_cargados() -> None:
     _nvd_falsa(pagina(CVES))

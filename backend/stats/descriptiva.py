@@ -23,6 +23,17 @@ class ResumenNumerico:
     mediana: float | None
     desviacion: float | None  # muestral (n − 1); None si n < 2
 
+@dataclass(frozen=True)
+class Atipicos:
+    """Valores fuera de [Q1 − k·IQR, Q3 + k·IQR]. Se marcan, no se eliminan."""
+
+    q1: float | None
+    q3: float | None
+    limite_inferior: float | None
+    limite_superior: float | None
+    cantidad: int
+    marcados: pd.Series  # máscara booleana con el índice de la serie original
+
 def distribucion(
     serie: pd.Series, orden: Sequence[str] | None = None, top: int | None = None
 ) -> list[Categoria]:
@@ -50,10 +61,14 @@ def distribucion(
 
 def serie_diaria(fechas: pd.Series) -> list[tuple[date, int]]:
     """CVE por día, incluidos los días sin publicaciones dentro del rango."""
-    # ISO8601 admite fechas con y sin milisegundos (la NVD manda ambas)
-    dias = pd.to_datetime(fechas.dropna().astype(str), format="ISO8601").dt.normalize()
-    if dias.empty:
+    # Acepta fechas ya convertidas y texto ISO8601 (la NVD manda fechas con y sin
+    # milisegundos). Todo se lee como UTC, que es la zona de la NVD
+    sin_nulos = fechas.dropna()
+    if sin_nulos.empty:
         return []
+    if not pd.api.types.is_datetime64_any_dtype(sin_nulos):
+        sin_nulos = sin_nulos.astype(str)
+    dias = pd.to_datetime(sin_nulos, utc=True, format="ISO8601").dt.tz_localize(None).dt.normalize()
     conteos = dias.value_counts().sort_index()
     rango = pd.date_range(conteos.index.min(), conteos.index.max(), freq="D")
     conteos = conteos.reindex(rango, fill_value=0)
@@ -82,3 +97,20 @@ def resumen_numerico(puntuaciones: pd.Series) -> ResumenNumerico:
         mediana=float(valores.median()),
         desviacion=float(valores.std(ddof=1)) if n > 1 else None,
     )
+
+def atipicos_iqr(serie: pd.Series, k: float = 1.5) -> Atipicos:
+    """Atípicos por el método IQR: fuera de [Q1 − k·IQR, Q3 + k·IQR].
+
+    Con menos de 4 datos no hay cuartiles fiables y no se marca nada. Los atípicos
+    de CVE (por ejemplo, muchas referencias) son datos reales: se marcan para
+    informarlos, no se quitan, porque eliminarlos sesgaría las proporciones.
+    """
+    valores = pd.to_numeric(serie, errors="coerce")
+    sin_marcar = pd.Series(False, index=serie.index)
+    if valores.notna().sum() < 4:
+        return Atipicos(None, None, None, None, 0, sin_marcar)
+    q1, q3 = float(valores.quantile(0.25)), float(valores.quantile(0.75))
+    iqr = q3 - q1
+    inferior, superior = q1 - k * iqr, q3 + k * iqr
+    marcados = valores.notna() & ((valores < inferior) | (valores > superior))
+    return Atipicos(q1, q3, inferior, superior, int(marcados.sum()), marcados)

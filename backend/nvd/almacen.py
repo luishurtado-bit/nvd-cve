@@ -5,12 +5,14 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 import pandas as pd
 import config
-from nvd.extraccion import COL_ESTADO, COL_VERSION, COLUMNAS, severidad_cvss
+from nvd.extraccion import COLUMNAS, severidad_cvss
 from stats.eventos import COL_ID, COL_PRIVILEGIOS, COL_PUBLICADO, COL_PUNTUACION, COL_SEVERIDAD, COL_VECTOR
 
-# Un CSV subido debe traer al menos estas; las demás se completan
+# Un CSV subido debe traer al menos estas; las demás se completan con nulos
 COLUMNAS_OBLIGATORIAS = (COL_ID, COL_PUBLICADO, COL_PUNTUACION, COL_VECTOR, COL_PRIVILEGIOS)
-_TIPOS_TEXTO = {c: "string" for c in COLUMNAS if c != COL_PUNTUACION}
+# Todo se lee como texto: la conversión de tipos es el paso 4.4 de la depuración,
+# que así puede contar los valores con formato inválido
+_TIPOS_TEXTO = {c: "string" for c in COLUMNAS}
 
 class ErrorCSV(ValueError):
     """El CSV no tiene el formato esperado."""
@@ -46,7 +48,8 @@ def guardar(
     return ruta
 
 def leer_csv(contenido: bytes | str | Path) -> pd.DataFrame:
-    """Lee un CSV con el formato de COLUMNAS; completa las columnas opcionales."""
+    """Lee un CSV con el formato de COLUMNAS, todo como texto; completa las columnas
+    opcionales con nulos."""
     try:
         fuente = io.BytesIO(contenido) if isinstance(contenido, bytes) else contenido
         df = pd.read_csv(fuente, dtype=_TIPOS_TEXTO, encoding="utf-8-sig")
@@ -57,13 +60,13 @@ def leer_csv(contenido: bytes | str | Path) -> pd.DataFrame:
         raise ErrorCSV(f"Al CSV le faltan columnas: {', '.join(faltantes)}")
     if df.empty:
         raise ErrorCSV("El CSV no tiene filas")
-    df[COL_PUNTUACION] = pd.to_numeric(df[COL_PUNTUACION], errors="coerce")
-    for col in (COL_ESTADO, COL_VERSION, COL_SEVERIDAD, "cwe"):
+    for col in COLUMNAS:
         if col not in df.columns:
             df[col] = pd.Series(pd.NA, index=df.index, dtype="string")
-    # Severidad faltante: se deduce de la puntuación
-    falta = df[COL_SEVERIDAD].isna() & df[COL_PUNTUACION].notna()
-    df.loc[falta, COL_SEVERIDAD] = df.loc[falta, COL_PUNTUACION].map(severidad_cvss)
+    # Severidad faltante: se deduce de la puntuación (si es un número válido)
+    puntuacion = pd.to_numeric(df[COL_PUNTUACION], errors="coerce")
+    falta = df[COL_SEVERIDAD].isna() & puntuacion.between(0, 10)
+    df.loc[falta, COL_SEVERIDAD] = puntuacion[falta].map(severidad_cvss)
     return df.loc[:, list(COLUMNAS)]
 
 def cargar(ruta: Path) -> tuple[pd.DataFrame, Metadatos]:

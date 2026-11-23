@@ -40,10 +40,18 @@ class Periodo(BaseModel):
 
 class ResumenDatos(BaseModel):
     periodo: Periodo
-    descargados: int = Field(ge=0)
+    descargados: int = Field(ge=0, description="Filas descargadas, con los duplicados")
     rechazados: int = Field(ge=0, description="CVE con estado Rejected")
+    duplicados: int = Field(0, ge=0, description="Filas con un cve_id ya visto (queda la más reciente)")
     sin_puntuacion: int = Field(ge=0, description="CVE sin puntuación CVSS")
-    N: int = Field(ge=0, description="Tamaño del espacio muestral Ω")
+    formato_invalido: int = Field(
+        0, ge=0, description="CVE cuya puntuación no es un número entre 0 y 10"
+    )
+    N: int = Field(
+        ge=0,
+        description="Tamaño del espacio muestral Ω: descargados − rechazados − duplicados "
+        "− sin puntuación − formato inválido",
+    )
     origen: Origen = Field(
         "simulado", description="De dónde salen los datos: simulados, API de la NVD o CSV"
     )
