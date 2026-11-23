@@ -11,8 +11,8 @@ Resumen de **lo mío** del [plan de trabajo v2](plan-de-trabajo-v2.md), sección
 | # | Iteración | Tareas | Desbloquea | Estado |
 |---|---|---|---|---|
 | 1 | Datos y depuración | B16, B17, B18 | B19 | [x] hecha (`6fc6746`) |
-| 2 | Calidad, bases y kpis | B19, B20, B24 | FB7, FG1, FB6 (Gaby) | [x] hecha, pendiente de commit |
-| 3 | Descriptivo | B21, B22, B23 | FB6, FB8 (Gaby) | [ ] |
+| 2 | Calidad, bases y kpis | B19, B20, B24 | FB7, FG1, FB6 (Gaby) | [x] hecha (`f6708cf`) |
+| 3 | Descriptivo | B21, B22, B23 | FB6, FB8 (Gaby) | [x] hecha, pendiente de commit |
 | 4 | Estadística clara | B26, B27 | FA7, FA5 (Luis) | [ ] |
 | 5 | Demo y cierre | B13, B11, B12, B28 | FC1 a FC4 | [ ] |
 
@@ -40,6 +40,8 @@ Resumen de **lo mío** del [plan de trabajo v2](plan-de-trabajo-v2.md), sección
 - **`/exportar/crudo`:** de una descarga, el `.crudo.json.gz` (misma forma que la respuesta de la NVD); de un CSV subido, ese CSV; de una descarga anterior a esta iteración, el CSV sin depurar; de los simulados, su versión sin depurar (1300 filas).
 - **Simulados en la calidad:** `mocks.crudo()` = Ω + 50 *Rejected* + 250 sin puntuación, y pasa por el mismo `depurar()`. Cuadra con `mocks.resumen()`.
 - **Registro:** quedan registradas las exportaciones (`exportar_cve`, `exportar_crudo`, `exportar_calidad`); `GET /datos/calidad` y `/dashboard/kpis` son consultas de pantalla y no se registran.
+- **Filtros:** `severidad`, `vector` y `privilegios` aceptan varios valores (parámetro repetido); fechas incluidas en los dos extremos; `hasta < desde` → 422. Se leen con un `Depends` (`leer_filtros`) y se aplican con `fuente.filtrar`, igual en todas las rutas.
+- **Agrupaciones:** las filas sin dato no entran en los grupos; `critico-por` informa cuántas son (`sin_dato`). `cruce` admite otras variables además de severidad × vector. La serie conserva el nombre `serie-diaria` para no romper al frontend, aunque ya agrupa por semana o mes.
 - **KPIs:** proporciones entre 0 y 1 (`proporcion_*`), con su conteo al lado; salen de `contar_eventos`, así que coinciden con A, B y C de `/api/eventos`.
 
 ## Iteración 1: datos y depuración (B16 + B17 + B18)
@@ -85,18 +87,18 @@ Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 292 prue
 
 ## Iteración 3: descriptivo (B21 + B22 + B23)
 
-- [ ] **B21** Filtros globales (`desde`, `hasta`, `severidad`, `vector`, `privilegios`) con `filtrar(df, filtros)` en todos los `GET /api/dashboard/*`.
-- [ ] **B22** Resumen numérico ampliado (mínimo, Q1, Q3, máximo, asimetría) y `GET /api/dashboard/resumen-numerico`.
-- [ ] **B23** Agrupaciones para P2 y P3.
-  - [ ] `GET /api/dashboard/critico-por`
-  - [ ] `GET /api/dashboard/cruce`
-  - [ ] `GET /api/dashboard/serie-diaria?agrupar=dia|semana|mes` (con críticos y % de críticos)
-  - [ ] `GET /api/dashboard/privilegios` y `GET /api/dashboard/fuentes`
-- [ ] Prueba: dos endpoints con el mismo filtro dan el mismo total.
-- [ ] Avisar a Gaby y regenerar tipos.
-- [ ] `pytest` en verde.
+- [x] **B21** Filtros globales (`desde`, `hasta`, `severidad`, `vector`, `privilegios`) con `filtrar(df, filtros)` en todos los `GET /api/dashboard/*`, incluido `kpis` (gana `N_sin_filtro`).
+- [x] **B22** Resumen numérico ampliado (mínimo, Q1, Q3, máximo, asimetría) y `GET /api/dashboard/resumen-numerico` (`base_score` y `n_referencias`).
+- [x] **B23** Agrupaciones para P2 y P3 (`stats/descriptiva.py`: `serie_temporal`, `critico_por`, `tabla_cruzada`).
+  - [x] `GET /api/dashboard/critico-por?variable=vector|privilegios|version|fuente&umbral=&top=`
+  - [x] `GET /api/dashboard/cruce?fila=&columna=` (por defecto severidad × vector; % por fila)
+  - [x] `GET /api/dashboard/serie-diaria?agrupar=dia|semana|mes&umbral=` (con críticos y proporción de críticos)
+  - [x] `GET /api/dashboard/privilegios` y `GET /api/dashboard/fuentes?top=`
+- [x] Prueba: con el mismo filtro, los 11 endpoints dan el mismo total (`tests/test_api_descriptivo.py`).
+- [x] Tipos regenerados (`tsc -b` sin errores). Falta avisar a Gaby.
+- [x] `pytest` en verde.
 
-Hecho: —
+Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 321 pruebas pasan
 
 ## Iteración 4: estadística clara (B26 + B27)
 
@@ -139,4 +141,5 @@ Hecho: —
 |---|---|---|---|
 | 2026-11-23 | Línea base | 20dc49a | 229 pasan |
 | 2026-11-23 | 1 · Datos y depuración | 6fc6746 | 268 pasan |
-| 2026-11-23 | 2 · Calidad, bases y kpis | (sin commit) | 292 pasan |
+| 2026-11-23 | 2 · Calidad, bases y kpis | f6708cf | 292 pasan |
+| 2026-11-23 | 3 · Descriptivo | (sin commit) | 321 pasan |

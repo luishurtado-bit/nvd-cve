@@ -218,18 +218,18 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 
 ### Fase 6: descriptivo para el dashboard
 
-**B21 (M) Filtros globales.**
+**[x] B21 (M) Filtros globales.**
 - **Qué:** todos los `GET /api/dashboard/*` aceptan `desde`, `hasta`, `severidad`, `vector` y `privilegios`, para que los indicadores y los gráficos respondan al mismo filtro. Se implementa con una función común `filtrar(df, filtros)`.
 - **Dónde:** `api/fuente.py`, `api/rutas/dashboard.py`.
 - **Listo cuando:** una prueba confirma que dos endpoints con el mismo filtro dan el mismo total.
 - **El frontend lo nota en:** FB8.
 
-**B22 (S) Resumen numérico ampliado.**
+**[x] B22 (S) Resumen numérico ampliado.**
 - **Qué:** agrega mínimo, Q1, Q3, máximo y asimetría a n, media, mediana y desviación, para `base_score` y `n_referencias`.
 - **Dónde:** `stats/descriptiva.py`.
 - **El frontend lo nota en:** la tabla de resumen de FB8.
 
-**B23 (M) Agrupaciones para P2 y P3.**
+**[x] B23 (M) Agrupaciones para P2 y P3.**
 - **Qué:**
   - `GET /api/dashboard/critico-por?variable=vector|privilegios|version|fuente` devuelve conteo, críticos y % crítico por grupo.
   - `GET /api/dashboard/cruce` devuelve la tabla cruzada severidad × vector, con conteos y % por fila.
@@ -412,8 +412,9 @@ Además:
 | `GET /api/datos/calidad` | Nueva | B19 | Front B (FB7) | Sí |
 | `GET /api/datos/resumen` | Gana `duplicados` y `formato_invalido` (ya, con B17) y `fecha_consulta` (B19). ⚠ `descargados` ahora cuenta las filas crudas, con duplicados | B17, B19 | Los dos (FG1) | Sí |
 | `GET /api/exportar/crudo`, `/calidad` | Nuevas. `crudo`: JSON de la NVD comprimido (`.json.gz`) si viene de una descarga; CSV si viene de un CSV subido o de los simulados | B19 | Front B | No |
-| `GET /api/dashboard/*` | Aceptan `desde`, `hasta`, `severidad`, `vector` y `privilegios` | B21 | Front B (FB8) | Sí |
-| `GET /api/dashboard/kpis`, `/critico-por`, `/cruce`, `/privilegios`, `/fuentes` | Nuevas | B23, B24 | Front B (FB6, FB8) | Sí |
+| `GET /api/dashboard/*` | Aceptan `desde`, `hasta`, `severidad`, `vector` y `privilegios`. Los tres últimos admiten varios valores repitiendo el parámetro (`?severidad=CRITICAL&severidad=HIGH`) | B21 | Front B (FB8) | Sí |
+| `GET /api/dashboard/kpis`, `/critico-por`, `/cruce`, `/privilegios`, `/fuentes`, `/resumen-numerico` | Nuevas. `critico-por?variable=vector\|privilegios\|version\|fuente`; `cruce?fila=…&columna=…` (por defecto severidad × vector) | B22, B23, B24 | Front B (FB6, FB8) | Sí |
+| `GET /api/dashboard/serie-diaria` | Acepta `agrupar=dia\|semana\|mes` y `umbral`; cada punto gana `criticos` y `proporcion_criticos`. Las semanas empiezan en lunes | B23 | Front B (FB6, FB8) | Sí (sin romper) |
 | `POST /api/binomial` | Sin vector ni privilegios; gana `n_max_recomendado` y `supuestos` | B26 | Front A (FA7) | **Sí, y rompe lo actual** |
 | `POST /api/reglas` | Gana `diferencia`, `razon` y `tabla` 2×2 | B27 | Front A (FA5) | Sí |
 

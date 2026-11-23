@@ -265,6 +265,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/privilegios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Privilegios
+         * @description Conteo por privilegios requeridos: NONE, LOW, HIGH.
+         */
+        get: operations["privilegios_api_dashboard_privilegios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/fuentes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fuentes
+         * @description Las `top` fuentes (CNA) que más CVE publicaron.
+         */
+        get: operations["fuentes_api_dashboard_fuentes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/serie-diaria": {
         parameters: {
             query?: never;
@@ -274,7 +314,8 @@ export interface paths {
         };
         /**
          * Serie Diaria
-         * @description CVE publicados por día.
+         * @description CVE publicados y críticos por día, semana o mes. Con 120 días conviene
+         *     agrupar por semana: por día son demasiados puntos para leerlos.
          */
         get: operations["serie_diaria_api_dashboard_serie_diaria_get"];
         put?: never;
@@ -317,6 +358,68 @@ export interface paths {
          * @description Los `top` CWE más frecuentes; `total` cuenta todos los CVE con CWE.
          */
         get: operations["cwe_api_dashboard_cwe_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/resumen-numerico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resumen Numerico
+         * @description Mínimo, cuartiles, máximo, media, desviación y asimetría de baseScore y n_referencias.
+         */
+        get: operations["resumen_numerico_api_dashboard_resumen_numerico_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/critico-por": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Critico Por
+         * @description Proporción de críticos en cada grupo (P2 y P3): ¿cambia según el vector, los
+         *     privilegios, la versión de CVSS o la fuente? Es una observación, no una causa.
+         */
+        get: operations["critico_por_api_dashboard_critico_por_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/cruce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cruce
+         * @description Tabla cruzada (por defecto severidad × vector de ataque), con conteos y
+         *     proporción sobre el total de cada fila, para barras apiladas al 100 %.
+         */
+        get: operations["cruce_api_dashboard_cruce_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -738,6 +841,21 @@ export interface components {
              */
             fin: string;
         };
+        /** CeldaCruce */
+        CeldaCruce: {
+            /**
+             * Categoria
+             * @description Categoría de la columna
+             */
+            categoria: string;
+            /** Conteo */
+            conteo: number;
+            /**
+             * Proporcion
+             * @description Sobre el total de la fila
+             */
+            proporcion: number;
+        };
         /** Conciliacion */
         Conciliacion: {
             /** Descargados */
@@ -799,6 +917,57 @@ export interface components {
              * @enum {string}
              */
             privilegios: "NONE" | "LOW" | "HIGH";
+        };
+        /** CriticoPorOut */
+        CriticoPorOut: {
+            /**
+             * Variable
+             * @enum {string}
+             */
+            variable: "vector" | "privilegios" | "version" | "fuente";
+            /** Umbral */
+            umbral: number;
+            /**
+             * Total
+             * @description CVE con dato en la variable
+             */
+            total: number;
+            /** Criticos */
+            criticos: number;
+            /**
+             * Proporcion Criticos
+             * @description La de todos los grupos juntos, para comparar
+             */
+            proporcion_criticos: number | null;
+            /**
+             * Sin Dato
+             * @description CVE sin valor en la variable (no entran en los grupos)
+             */
+            sin_dato: number;
+            /** Grupos */
+            grupos: components["schemas"]["GrupoCriticoOut"][];
+        };
+        /** CruceOut */
+        CruceOut: {
+            /**
+             * Fila
+             * @enum {string}
+             */
+            fila: "severidad" | "vector" | "privilegios" | "version";
+            /**
+             * Columna
+             * @enum {string}
+             */
+            columna: "severidad" | "vector" | "privilegios" | "version";
+            /**
+             * Total
+             * @description CVE con dato en las dos variables
+             */
+            total: number;
+            /** Columnas */
+            columnas: string[];
+            /** Filas */
+            filas: components["schemas"]["FilaCruceOut"][];
         };
         /** DescargaOut */
         DescargaOut: {
@@ -906,6 +1075,32 @@ export interface components {
             N: number;
             eventos: components["schemas"]["TablaEventos"];
         };
+        /** FilaCruceOut */
+        FilaCruceOut: {
+            /** Categoria */
+            categoria: string;
+            /** Total */
+            total: number;
+            /**
+             * Celdas
+             * @description Una por columna, en el orden de `columnas`
+             */
+            celdas: components["schemas"]["CeldaCruce"][];
+        };
+        /** GrupoCriticoOut */
+        GrupoCriticoOut: {
+            /** Grupo */
+            grupo: string;
+            /** Total */
+            total: number;
+            /** Criticos */
+            criticos: number;
+            /**
+             * Proporcion Criticos
+             * @description criticos / total
+             */
+            proporcion_criticos: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -940,9 +1135,14 @@ export interface components {
         KpisOut: {
             /**
              * N
-             * @description CVE en Ω
+             * @description CVE en Ω que cumplen los filtros
              */
             N: number;
+            /**
+             * N Sin Filtro
+             * @description CVE en Ω, sin filtros
+             */
+            N_sin_filtro: number;
             /**
              * Umbral
              * @description Crítico: baseScore ≥ umbral
@@ -1045,10 +1245,22 @@ export interface components {
             /**
              * Fecha
              * Format: date
+             * @description Día, lunes de la semana o primer día del mes
              */
             fecha: string;
             /** Conteo */
             conteo: number;
+            /**
+             * Criticos
+             * @description CVE con baseScore ≥ umbral
+             * @default 0
+             */
+            criticos: number;
+            /**
+             * Proporcion Criticos
+             * @description criticos / conteo; null si conteo = 0
+             */
+            proporcion_criticos?: number | null;
         };
         /** ReglasIn */
         ReglasIn: {
@@ -1167,6 +1379,38 @@ export interface components {
              */
             fecha_consulta?: string | null;
         };
+        /** ResumenNumericoOut */
+        ResumenNumericoOut: {
+            /** Variable */
+            variable: string;
+            /**
+             * N
+             * @description Valores no nulos
+             */
+            n: number;
+            /** Media */
+            media: number | null;
+            /** Mediana */
+            mediana: number | null;
+            /**
+             * Desviacion
+             * @description Desviación estándar muestral; null si n < 2
+             */
+            desviacion: number | null;
+            /** Minimo */
+            minimo: number | null;
+            /** Q1 */
+            q1: number | null;
+            /** Q3 */
+            q3: number | null;
+            /** Maximo */
+            maximo: number | null;
+            /**
+             * Asimetria
+             * @description > 0: cola a la derecha; < 0: a la izquierda; null si n < 3
+             */
+            asimetria: number | null;
+        };
         /** Salud */
         Salud: {
             /** Estado */
@@ -1177,8 +1421,19 @@ export interface components {
             /** Total */
             total: number;
             /**
+             * Agrupar
+             * @default dia
+             * @enum {string}
+             */
+            agrupar: "dia" | "semana" | "mes";
+            /**
+             * Umbral
+             * @default 9
+             */
+            umbral: number;
+            /**
              * Puntos
-             * @description Un punto por día, incluidos los días sin CVE
+             * @description Un punto por periodo, incluidos los periodos sin CVE
              */
             puntos: components["schemas"]["PuntoSerie"][];
         };
@@ -1551,7 +1806,18 @@ export interface operations {
     };
     severidad_api_dashboard_severidad_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1565,13 +1831,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DistribucionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
     };
     vector_ataque_api_dashboard_vector_ataque_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1587,11 +1873,116 @@ export interface operations {
                     "application/json": components["schemas"]["DistribucionOut"];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    privilegios_api_dashboard_privilegios_get: {
+        parameters: {
+            query?: {
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DistribucionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fuentes_api_dashboard_fuentes_get: {
+        parameters: {
+            query?: {
+                top?: number;
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DistribucionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     serie_diaria_api_dashboard_serie_diaria_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Semanas de lunes a domingo */
+                agrupar?: "dia" | "semana" | "mes";
+                /** @description Crítico: baseScore ≥ umbral */
+                umbral?: number;
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1607,12 +1998,31 @@ export interface operations {
                     "application/json": components["schemas"]["SerieDiariaOut"];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     histograma_api_dashboard_histograma_get: {
         parameters: {
             query?: {
                 bins?: number;
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
             };
             header?: never;
             path?: never;
@@ -1644,6 +2054,16 @@ export interface operations {
         parameters: {
             query?: {
                 top?: number;
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
             };
             header?: never;
             path?: never;
@@ -1671,10 +2091,148 @@ export interface operations {
             };
         };
     };
+    resumen_numerico_api_dashboard_resumen_numerico_get: {
+        parameters: {
+            query?: {
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumenNumericoOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    critico_por_api_dashboard_critico_por_get: {
+        parameters: {
+            query: {
+                variable: "vector" | "privilegios" | "version" | "fuente";
+                /** @description Crítico: baseScore ≥ umbral */
+                umbral?: number;
+                /** @description Solo los grupos con más CVE */
+                top?: number | null;
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CriticoPorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cruce_api_dashboard_cruce_get: {
+        parameters: {
+            query?: {
+                fila?: "severidad" | "vector" | "privilegios" | "version";
+                columna?: "severidad" | "vector" | "privilegios" | "version";
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CruceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     kpis_api_dashboard_kpis_get: {
         parameters: {
             query?: {
+                /** @description Crítico: baseScore ≥ umbral */
                 umbral?: number;
+                /** @description Publicados desde este día (incluido) */
+                desde?: string | null;
+                /** @description Publicados hasta este día (incluido) */
+                hasta?: string | null;
+                /** @description Una o varias; se repite el parámetro */
+                severidad?: ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "NONE")[] | null;
+                /** @description Uno o varios vectores de ataque */
+                vector?: ("NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL")[] | null;
+                /** @description Uno o varios niveles */
+                privilegios?: ("NONE" | "LOW" | "HIGH")[] | null;
             };
             header?: never;
             path?: never;

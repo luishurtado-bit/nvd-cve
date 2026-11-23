@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, model_validator
 # Valores de la NVD (CVSS v3.x y v4.0)
 VectorAtaque = Literal["NETWORK", "ADJACENT_NETWORK", "ADJACENT", "LOCAL", "PHYSICAL"]
 Privilegios = Literal["NONE", "LOW", "HIGH"]
+Severidad = Literal["CRITICAL", "HIGH", "MEDIUM", "LOW", "NONE"]
 Evento = Literal["A", "B", "C"]
 Condicionante = Literal["B", "C"]
 Origen = Literal["simulado", "api", "csv"]
@@ -182,12 +183,16 @@ class DistribucionOut(BaseModel):
     categorias: list[ConteoCategoria]
 
 class PuntoSerie(BaseModel):
-    fecha: date
+    fecha: date = Field(description="Día, lunes de la semana o primer día del mes")
     conteo: int = Field(ge=0)
+    criticos: int = Field(0, ge=0, description="CVE con baseScore ≥ umbral")
+    proporcion_criticos: float | None = Field(None, description="criticos / conteo; null si conteo = 0")
 
 class SerieDiariaOut(BaseModel):
     total: int
-    puntos: list[PuntoSerie] = Field(description="Un punto por día, incluidos los días sin CVE")
+    agrupar: Literal["dia", "semana", "mes"] = "dia"
+    umbral: float = 9.0
+    puntos: list[PuntoSerie] = Field(description="Un punto por periodo, incluidos los periodos sin CVE")
 
 class IntervaloHistograma(BaseModel):
     desde: float
@@ -301,7 +306,8 @@ class CalidadOut(BaseModel):
 # --- Indicadores clave (B24) ---
 
 class KpisOut(BaseModel):
-    N: int = Field(description="CVE en Ω")
+    N: int = Field(description="CVE en Ω que cumplen los filtros")
+    N_sin_filtro: int = Field(description="CVE en Ω, sin filtros")
     umbral: float = Field(description="Crítico: baseScore ≥ umbral")
     criticos: int
     proporcion_criticos: float | None = Field(description="Entre 0 y 1; null si N = 0")
@@ -315,3 +321,52 @@ class KpisOut(BaseModel):
     periodo: Periodo
     fecha_consulta: datetime | None
     origen: Origen
+
+# --- Descriptivo (B22, B23) ---
+
+VariableGrupo = Literal["vector", "privilegios", "version", "fuente"]
+VariableCruce = Literal["severidad", "vector", "privilegios", "version"]
+
+class ResumenNumericoOut(BaseModel):
+    variable: str
+    n: int = Field(description="Valores no nulos")
+    media: float | None
+    mediana: float | None
+    desviacion: float | None = Field(description="Desviación estándar muestral; null si n < 2")
+    minimo: float | None
+    q1: float | None
+    q3: float | None
+    maximo: float | None
+    asimetria: float | None = Field(description="> 0: cola a la derecha; < 0: a la izquierda; null si n < 3")
+
+class GrupoCriticoOut(BaseModel):
+    grupo: str
+    total: int = Field(ge=0)
+    criticos: int = Field(ge=0)
+    proporcion_criticos: float = Field(ge=0, le=1, description="criticos / total")
+
+class CriticoPorOut(BaseModel):
+    variable: VariableGrupo
+    umbral: float
+    total: int = Field(description="CVE con dato en la variable")
+    criticos: int
+    proporcion_criticos: float | None = Field(description="La de todos los grupos juntos, para comparar")
+    sin_dato: int = Field(description="CVE sin valor en la variable (no entran en los grupos)")
+    grupos: list[GrupoCriticoOut]
+
+class CeldaCruce(BaseModel):
+    categoria: str = Field(description="Categoría de la columna")
+    conteo: int = Field(ge=0)
+    proporcion: float = Field(ge=0, le=1, description="Sobre el total de la fila")
+
+class FilaCruceOut(BaseModel):
+    categoria: str
+    total: int
+    celdas: list[CeldaCruce] = Field(description="Una por columna, en el orden de `columnas`")
+
+class CruceOut(BaseModel):
+    fila: VariableCruce
+    columna: VariableCruce
+    total: int = Field(description="CVE con dato en las dos variables")
+    columnas: list[str]
+    filas: list[FilaCruceOut]
