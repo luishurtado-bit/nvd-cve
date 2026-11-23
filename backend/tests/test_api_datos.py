@@ -11,7 +11,10 @@ from tests.ejemplos_nvd import RespuestaFalsa, SesionFalsa, cve, metrica, pagina
 
 client = TestClient(app)
 
-CAMPOS = {"periodo", "descargados", "rechazados", "duplicados", "sin_puntuacion", "formato_invalido", "N", "origen"}
+CAMPOS = {
+    "periodo", "descargados", "rechazados", "duplicados", "sin_puntuacion", "formato_invalido", "N", "origen",
+    "fecha_consulta",
+}
 PERIODO = {"inicio": "2026-11-01", "fin": "2026-11-02"}
 
 # 4 descargados: 1 rechazado, 1 sin puntuación, N = 2 (1 crítico de red, 1 local)

@@ -3,10 +3,24 @@ import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 import config
 from api import descargas, estado, fuente, registro
-from api.esquemas import CargarIn, DescargaOut, ResumenDatos
+from api.esquemas import (
+    AtipicosOut,
+    CalidadOut,
+    CargarIn,
+    Conciliacion,
+    ConteoCategoria,
+    DescargaOut,
+    DominioColumna,
+    NulosColumna,
+    PasoDepuracionOut,
+    ResumenDatos,
+    ValidacionOut,
+)
 from nvd import almacen
 from nvd.cliente import ClienteNVD, ErrorNVD
-from nvd.descargar import descargar_periodo
+from nvd.descargar import descargar_y_guardar
+from nvd.extraccion import COL_REFERENCIAS
+from stats.descriptiva import Atipicos, atipicos_iqr, serie_diaria
 from stats.eventos import COL_PUBLICADO
 
 router = APIRouter(prefix="/datos", tags=["datos"])
@@ -35,11 +49,10 @@ def cargar(datos: CargarIn, cliente: Annotated[ClienteNVD, Depends(obtener_clien
             "usa la descarga en segundo plano (POST /api/datos/descargas)",
         )
     try:
-        crudo = descargar_periodo(datos.inicio, datos.fin, cliente)
+        ruta = descargar_y_guardar(datos.inicio, datos.fin, cliente)
     except ErrorNVD as e:
         raise HTTPException(status_code=502, detail=f"La NVD no respondió bien: {e}") from e
-    almacen.guardar(crudo, datos.inicio, datos.fin, "api")
-    resumen = estado.establecer(crudo, datos.inicio, datos.fin, "api").resumen
+    resumen = estado.cargar(ruta).resumen
     registro.registrar("cargar", _periodo(datos), resumen.model_dump(mode="json"))
     return resumen
 
@@ -73,8 +86,8 @@ def cargar_archivo(archivo: UploadFile) -> ResumenDatos:
     fechas = pd.to_datetime(crudo[COL_PUBLICADO], errors="coerce", format="ISO8601").dropna()
     inicio = fechas.min().date() if not fechas.empty else None
     fin = fechas.max().date() if not fechas.empty else None
-    almacen.guardar(crudo, inicio, fin, "csv")
-    resumen = estado.establecer(crudo, inicio, fin, "csv").resumen
+    ruta = almacen.guardar(crudo, inicio, fin, "csv")
+    resumen = estado.cargar(ruta).resumen
     registro.registrar("archivo", {"nombre": archivo.filename}, resumen.model_dump(mode="json"))
     return resumen
 
@@ -82,3 +95,60 @@ def cargar_archivo(archivo: UploadFile) -> ResumenDatos:
 def resumen() -> ResumenDatos:
     """Resumen del conjunto actual (origen = "simulado" si no se ha cargado ninguno)."""
     return fuente.resumen()
+
+def _atipicos(variable: str, a: Atipicos, nota: str) -> AtipicosOut:
+    return AtipicosOut(
+        variable=variable,
+        q1=a.q1,
+        q3=a.q3,
+        limite_inferior=a.limite_inferior,
+        limite_superior=a.limite_superior,
+        cantidad=a.cantidad,
+        nota=nota,
+    )
+
+@router.get("/calidad", response_model=CalidadOut)
+def calidad() -> CalidadOut:
+    """Reporte de la limpieza (pasos 4.1 a 4.7 del notebook): qué se quitó y por qué,
+    nulos antes y después, valores por dominio, atípicos y conciliación."""
+    d = fuente.depuracion()
+    conteo = d.conteo
+    por_dia = pd.Series([c for _, c in serie_diaria(d.omega[COL_PUBLICADO])], dtype="float64")
+    dominios = []
+    for columna, frecuencias in d.frecuencias.items():
+        total = sum(frecuencias.values())
+        dominios.append(
+            DominioColumna(
+                columna=columna,
+                valores=[
+                    ConteoCategoria(categoria=valor, conteo=n, proporcion=n / total if total else 0.0)
+                    for valor, n in frecuencias.items()
+                ],
+                fuera_de_dominio=d.fuera_de_dominio.get(columna, 0),
+            )
+        )
+    return CalidadOut(
+        resumen=fuente.resumen(),
+        pasos=[PasoDepuracionOut(**vars(p)) for p in d.pasos],
+        nulos=[NulosColumna(**vars(n)) for n in d.nulos],
+        dominios=dominios,
+        atipicos=[
+            _atipicos(
+                COL_REFERENCIAS,
+                atipicos_iqr(d.omega[COL_REFERENCIAS]),
+                "CVE con muchas referencias: son datos reales, se marcan y no se eliminan",
+            ),
+            _atipicos(
+                "cve_por_dia",
+                atipicos_iqr(por_dia),
+                "Días con un volumen de publicación inusual; se informan, no se eliminan",
+            ),
+        ],
+        validaciones=[ValidacionOut(**vars(v)) for v in d.validaciones],
+        conciliacion=Conciliacion(
+            descargados=conteo.descargados,
+            eliminados=conteo.eliminados,
+            N=conteo.N,
+            cuadra=conteo.descargados - conteo.eliminados == conteo.N,
+        ),
+    )

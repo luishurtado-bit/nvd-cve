@@ -5,9 +5,8 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from api import estado, registro
 from api.esquemas import DescargaOut, EstadoDescarga, Periodo, ResumenDatos
-from nvd import almacen
 from nvd.cliente import Avance, ClienteNVD, ErrorNVD
-from nvd.descargar import descargar_periodo
+from nvd.descargar import descargar_y_guardar
 from nvd.periodos import partir_periodo
 
 log = logging.getLogger(__name__)
@@ -63,9 +62,8 @@ def _ejecutar(d: _Descarga, cliente: ClienteNVD) -> None:
     cliente.al_avanzar = al_avanzar
     cliente.progreso = al_avisar
     try:
-        crudo = descargar_periodo(d.inicio, d.fin, cliente)
-        almacen.guardar(crudo, d.inicio, d.fin, "api")
-        resumen = estado.establecer(crudo, d.inicio, d.fin, "api").resumen
+        ruta = descargar_y_guardar(d.inicio, d.fin, cliente)
+        resumen = estado.cargar(ruta).resumen
         registro.registrar(
             "descarga", {"inicio": d.inicio.isoformat(), "fin": d.fin.isoformat()}, resumen.model_dump(mode="json")
         )

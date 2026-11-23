@@ -10,8 +10,8 @@ Resumen de **lo mío** del [plan de trabajo v2](plan-de-trabajo-v2.md), sección
 
 | # | Iteración | Tareas | Desbloquea | Estado |
 |---|---|---|---|---|
-| 1 | Datos y depuración | B16, B17, B18 | B19 | [x] hecha, pendiente de commit |
-| 2 | Calidad, bases y kpis | B19, B20, B24 | FB7, FG1, FB6 (Gaby) | [ ] |
+| 1 | Datos y depuración | B16, B17, B18 | B19 | [x] hecha (`6fc6746`) |
+| 2 | Calidad, bases y kpis | B19, B20, B24 | FB7, FG1, FB6 (Gaby) | [x] hecha, pendiente de commit |
 | 3 | Descriptivo | B21, B22, B23 | FB6, FB8 (Gaby) | [ ] |
 | 4 | Estadística clara | B26, B27 | FA7, FA5 (Luis) | [ ] |
 | 5 | Demo y cierre | B13, B11, B12, B28 | FC1 a FC4 | [ ] |
@@ -35,6 +35,12 @@ Resumen de **lo mío** del [plan de trabajo v2](plan-de-trabajo-v2.md), sección
 - **Formato inválido:** `formato_invalido` cuenta las filas cuya puntuación no es un número entre 0 y 10; se excluyen igual que las que no tienen puntuación. Otras celdas inválidas (fechas, `n_referencias`, `kev`) quedan nulas y la fila se conserva.
 - **Tipos de Ω:** `publicado` y `ultima_modificacion` en UTC, `n_referencias` entero con nulos (`Int64`) y `kev` booleano con nulos (`boolean`); un CSV antiguo sin esas columnas no inventa valores.
 - **Nuevo endpoint** no previsto en el plan v2: `GET /api/dashboard/resumen-numerico` (para el resumen de `n_referencias`).
+- **Un solo camino de carga:** descarga, CSV subido y arranque pasan por `estado.cargar(ruta)`, que relee el CSV guardado. Así lo recién descargado se depura exactamente igual que lo recargado.
+- **`fecha_consulta`:** es el momento en que se guardó la descarga. `null` con datos simulados o subidos por CSV (no se sabe cuándo se consultó la NVD). Los metadatos anteriores, sin ese campo, usan `guardado`.
+- **`/exportar/crudo`:** de una descarga, el `.crudo.json.gz` (misma forma que la respuesta de la NVD); de un CSV subido, ese CSV; de una descarga anterior a esta iteración, el CSV sin depurar; de los simulados, su versión sin depurar (1300 filas).
+- **Simulados en la calidad:** `mocks.crudo()` = Ω + 50 *Rejected* + 250 sin puntuación, y pasa por el mismo `depurar()`. Cuadra con `mocks.resumen()`.
+- **Registro:** quedan registradas las exportaciones (`exportar_cve`, `exportar_crudo`, `exportar_calidad`); `GET /datos/calidad` y `/dashboard/kpis` son consultas de pantalla y no se registran.
+- **KPIs:** proporciones entre 0 y 1 (`proporcion_*`), con su conteo al lado; salen de `contar_eventos`, así que coinciden con A, B y C de `/api/eventos`.
 
 ## Iteración 1: datos y depuración (B16 + B17 + B18)
 
@@ -61,19 +67,21 @@ Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 268 prue
 
 Objetivo: desbloquear a Gaby (FB7, FG1, FB6).
 
-- [ ] **B19** Reporte de calidad y bases para entregar.
-  - [ ] `almacen.guardar()` escribe también `nombre.crudo.json.gz` y `fecha_consulta` en los metadatos.
-  - [ ] `ResumenDatos` gana `duplicados`, `formato_invalido` y `fecha_consulta`.
-  - [ ] `GET /api/datos/calidad` (datos reales y simulados).
-  - [ ] `GET /api/exportar/crudo` y `GET /api/exportar/calidad`.
-  - [ ] `GET /api/exportar/cve` con 20 columnas más `critico`.
-  - [ ] Cada llamada queda en el registro de ejecuciones.
-- [ ] **B20** Consulta por rango de fechas: prueba con ~250 días (3 tramos) y un solo camino de guardado (`almacen.guardar_descarga`).
-- [ ] **B24** `GET /api/dashboard/kpis` (adelantado: lo piden FB6 y FG1).
-- [ ] Avisar a Gaby y regenerar tipos (`npm run tipos`).
-- [ ] `pytest` en verde.
+- [x] **B19** Reporte de calidad y bases para entregar (`tests/test_api_calidad.py`).
+  - [x] `almacen.guardar()` escribe también `nombre.crudo.json.gz` y `fecha_consulta` en los metadatos.
+  - [x] `ResumenDatos` gana `duplicados`, `formato_invalido` y `fecha_consulta`.
+  - [x] `GET /api/datos/calidad` (datos reales y simulados): resumen, pasos, nulos, dominios, atípicos, validaciones y conciliación.
+  - [x] `GET /api/exportar/crudo` y `GET /api/exportar/calidad`.
+  - [x] `GET /api/exportar/cve` con 20 columnas más `critico` (`?umbral=`, por defecto 9).
+  - [x] Las exportaciones quedan en el registro de ejecuciones.
+- [x] **B20** Consulta por rango de fechas: prueba con 250 días (3 tramos) y un solo camino de guardado (`almacen.guardar_descarga` → `estado.cargar`).
+  - [x] Corregido: un periodo sin CVE guardaba un CSV vacío que luego no se podía recargar.
+- [x] **B24** `GET /api/dashboard/kpis?umbral=` (adelantado: lo piden FB6 y FG1).
+- [x] Tipos regenerados (`frontend/src/api/schema.d.ts`, `tsc -b` sin errores). Falta avisar a Gaby.
+- [x] `pytest` en verde.
+- [x] Riesgo 1 medido: 60 000 CVE sintéticos → guardar 3,0 s (gzip nivel 6; con el 9 eran 8,6 s), cargar y depurar 2,0 s, pico de memoria 63 MB. No hace falta escribir por tramos.
 
-Hecho: —
+Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 292 pruebas pasan
 
 ## Iteración 3: descriptivo (B21 + B22 + B23)
 
@@ -130,4 +138,5 @@ Hecho: —
 | Fecha | Iteración | Commit | Pruebas |
 |---|---|---|---|
 | 2026-11-23 | Línea base | 20dc49a | 229 pasan |
-| 2026-11-23 | 1 · Datos y depuración | (sin commit) | 268 pasan |
+| 2026-11-23 | 1 · Datos y depuración | 6fc6746 | 268 pasan |
+| 2026-11-23 | 2 · Calidad, bases y kpis | (sin commit) | 292 pasan |

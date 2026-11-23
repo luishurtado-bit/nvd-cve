@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 
 from api.esquemas import Periodo, ResumenDatos
+from nvd import almacen
+from nvd.depuracion import ResultadoDepuracion, depurar
 from nvd.extraccion import severidad_cvss
 from nvd.extraccion import (
     COL_COMPLEJIDAD,
@@ -110,3 +112,30 @@ def dataframe() -> pd.DataFrame:
     df[COL_KEV] = pd.array(rng.random(size=n) < 0.01, dtype="boolean")
     df[COL_MODIFICADO] = df[COL_PUBLICADO] + pd.to_timedelta(rng.integers(0, 10 * 86_400, size=n), unit="s")
     return df.loc[:, list(COLUMNAS)]
+
+@lru_cache(maxsize=1)
+def crudo() -> pd.DataFrame:
+    """Lo «descargado» de los simulados, como texto y sin depurar: Ω más los
+    rechazados y los sin puntuación. Pasa por el mismo `depurar` que los datos reales."""
+    rng = np.random.default_rng(2027)  # otra semilla: Ω no cambia
+    extra = RECHAZADOS + SIN_PUNTUACION
+    publicado = pd.Timestamp(_INICIO, tz="UTC") + pd.to_timedelta(rng.integers(0, _DIAS * 86_400, size=extra), unit="s")
+    sobrantes = pd.DataFrame(
+        {
+            COL_ID: [f"CVE-2026-{i:05d}" for i in range(N + 1, N + extra + 1)],
+            COL_PUBLICADO: publicado,
+            COL_ESTADO: ["Rejected"] * RECHAZADOS + ["Awaiting Analysis"] * SIN_PUNTUACION,
+            COL_FUENTE: rng.choice(_FUENTES, size=extra, p=_PESOS_FUENTES),
+            COL_REFERENCIAS: rng.integers(0, 4, size=extra),
+            COL_KEV: False,
+            COL_MODIFICADO: publicado,
+        }
+    )
+    todo = pd.concat([dataframe(), sobrantes.reindex(columns=list(COLUMNAS))], ignore_index=True)
+    # Ida y vuelta por CSV: queda como texto, igual que un conjunto guardado
+    texto = todo.to_csv(index=False, date_format="%Y-%m-%dT%H:%M:%S.%f").encode()
+    return almacen.leer_csv(texto)
+
+@lru_cache(maxsize=1)
+def depuracion() -> ResultadoDepuracion:
+    return depurar(crudo())

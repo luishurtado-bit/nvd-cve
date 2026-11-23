@@ -55,6 +55,9 @@ class ResumenDatos(BaseModel):
     origen: Origen = Field(
         "simulado", description="De dónde salen los datos: simulados, API de la NVD o CSV"
     )
+    fecha_consulta: datetime | None = Field(
+        None, description="Cuándo se consultó la NVD (UTC); null con datos simulados o de un CSV"
+    )
 
 # --- Eventos ---
 
@@ -245,3 +248,70 @@ class BinomialQuery(CriteriosIn):
     n: int = Field(gt=0, le=N_MAXIMO_BINOMIAL)
     k: int = Field(0, ge=0)
     p: float | None = Field(None, ge=0, le=1)
+
+# --- Calidad de datos (B19) ---
+
+class PasoDepuracionOut(BaseModel):
+    paso: str = Field(description='"4.1" … "4.7", como en el notebook')
+    descripcion: str
+    antes: int = Field(ge=0, description="Filas antes del paso")
+    despues: int = Field(ge=0)
+    eliminados: int = Field(ge=0)
+    justificacion: str
+
+class NulosColumna(BaseModel):
+    columna: str
+    antes: int = Field(ge=0, description="Nulos en lo descargado")
+    despues: int = Field(ge=0, description="Nulos en Ω")
+
+class DominioColumna(BaseModel):
+    columna: str
+    valores: list[ConteoCategoria] = Field(description="Valores permitidos que aparecen en Ω, de mayor a menor")
+    fuera_de_dominio: int = Field(ge=0, description="Valores no permitidos que quedaron nulos")
+
+class AtipicosOut(BaseModel):
+    variable: str
+    q1: float | None
+    q3: float | None
+    limite_inferior: float | None = Field(description="Q1 − 1,5·IQR")
+    limite_superior: float | None = Field(description="Q3 + 1,5·IQR")
+    cantidad: int = Field(ge=0, description="Valores fuera de los límites: se marcan, no se eliminan")
+    nota: str
+
+class ValidacionOut(BaseModel):
+    nombre: str
+    cumple: bool
+    detalle: str
+
+class Conciliacion(BaseModel):
+    descargados: int
+    eliminados: int = Field(description="Rechazados + duplicados + sin puntuación + formato inválido")
+    N: int
+    cuadra: bool = Field(description="descargados − eliminados = N")
+
+class CalidadOut(BaseModel):
+    resumen: ResumenDatos
+    pasos: list[PasoDepuracionOut]
+    nulos: list[NulosColumna] = Field(description="Las 20 variables, antes y después de limpiar")
+    dominios: list[DominioColumna]
+    atipicos: list[AtipicosOut]
+    validaciones: list[ValidacionOut]
+    conciliacion: Conciliacion
+
+# --- Indicadores clave (B24) ---
+
+class KpisOut(BaseModel):
+    N: int = Field(description="CVE en Ω")
+    umbral: float = Field(description="Crítico: baseScore ≥ umbral")
+    criticos: int
+    proporcion_criticos: float | None = Field(description="Entre 0 y 1; null si N = 0")
+    media_puntuacion: float | None
+    mediana_puntuacion: float | None
+    red: int = Field(description="CVE con vector de ataque NETWORK")
+    proporcion_red: float | None
+    sin_privilegios: int = Field(description="CVE con privilegios NONE")
+    proporcion_sin_privilegios: float | None
+    kev: int = Field(description="CVE en el catálogo KEV de CISA")
+    periodo: Periodo
+    fecha_consulta: datetime | None
+    origen: Origen

@@ -124,6 +124,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/datos/calidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Calidad
+         * @description Reporte de la limpieza (pasos 4.1 a 4.7 del notebook): qué se quitó y por qué,
+         *     nulos antes y después, valores por dominio, atípicos y conciliación.
+         */
+        get: operations["calidad_api_datos_calidad_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/eventos": {
         parameters: {
             query?: never;
@@ -304,6 +325,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/kpis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kpis
+         * @description Indicadores clave del conjunto: los mismos conteos que los eventos A, B y C
+         *     (crítico, por red y sin privilegios), más la puntuación media y el KEV.
+         */
+        get: operations["kpis_api_dashboard_kpis_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/exportar/cve": {
         parameters: {
             query?: never;
@@ -313,9 +355,50 @@ export interface paths {
         };
         /**
          * Exportar Cve
-         * @description CVE del espacio muestral Ω actual (ya depurados).
+         * @description Base limpia: los CVE de Ω (20 variables) y `critico` (baseScore ≥ umbral).
          */
         get: operations["exportar_cve_api_exportar_cve_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exportar/crudo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Crudo
+         * @description Base original, sin depurar. De una descarga, el JSON de la NVD tal cual llegó
+         *     (comprimido); de un CSV subido, ese CSV; de los simulados, su versión sin depurar.
+         */
+        get: operations["exportar_crudo_api_exportar_crudo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exportar/calidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Calidad
+         * @description Pasos de la limpieza (4.1 a 4.7) con lo eliminado y su justificación.
+         */
+        get: operations["exportar_calidad_api_exportar_calidad_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -434,6 +517,32 @@ export interface components {
             codigo: string;
             /** Mensaje */
             mensaje: string;
+        };
+        /** AtipicosOut */
+        AtipicosOut: {
+            /** Variable */
+            variable: string;
+            /** Q1 */
+            q1: number | null;
+            /** Q3 */
+            q3: number | null;
+            /**
+             * Limite Inferior
+             * @description Q1 − 1,5·IQR
+             */
+            limite_inferior: number | null;
+            /**
+             * Limite Superior
+             * @description Q3 + 1,5·IQR
+             */
+            limite_superior: number | null;
+            /**
+             * Cantidad
+             * @description Valores fuera de los límites: se marcan, no se eliminan
+             */
+            cantidad: number;
+            /** Nota */
+            nota: string;
         };
         /** BayesIn */
         BayesIn: {
@@ -598,6 +707,24 @@ export interface components {
             /** Archivo */
             archivo: string;
         };
+        /** CalidadOut */
+        CalidadOut: {
+            resumen: components["schemas"]["ResumenDatos"];
+            /** Pasos */
+            pasos: components["schemas"]["PasoDepuracionOut"][];
+            /**
+             * Nulos
+             * @description Las 20 variables, antes y después de limpiar
+             */
+            nulos: components["schemas"]["NulosColumna"][];
+            /** Dominios */
+            dominios: components["schemas"]["DominioColumna"][];
+            /** Atipicos */
+            atipicos: components["schemas"]["AtipicosOut"][];
+            /** Validaciones */
+            validaciones: components["schemas"]["ValidacionOut"][];
+            conciliacion: components["schemas"]["Conciliacion"];
+        };
         /** CargarIn */
         CargarIn: {
             /**
@@ -610,6 +737,23 @@ export interface components {
              * Format: date
              */
             fin: string;
+        };
+        /** Conciliacion */
+        Conciliacion: {
+            /** Descargados */
+            descargados: number;
+            /**
+             * Eliminados
+             * @description Rechazados + duplicados + sin puntuación + formato inválido
+             */
+            eliminados: number;
+            /** N */
+            N: number;
+            /**
+             * Cuadra
+             * @description descargados − eliminados = N
+             */
+            cuadra: boolean;
         };
         /** ConteoCategoria */
         ConteoCategoria: {
@@ -713,6 +857,21 @@ export interface components {
             /** Categorias */
             categorias: components["schemas"]["ConteoCategoria"][];
         };
+        /** DominioColumna */
+        DominioColumna: {
+            /** Columna */
+            columna: string;
+            /**
+             * Valores
+             * @description Valores permitidos que aparecen en Ω, de mayor a menor
+             */
+            valores: components["schemas"]["ConteoCategoria"][];
+            /**
+             * Fuera De Dominio
+             * @description Valores no permitidos que quedaron nulos
+             */
+            fuera_de_dominio: number;
+        };
         /** Ejecucion */
         Ejecucion: {
             /**
@@ -776,6 +935,93 @@ export interface components {
             hasta: number;
             /** Conteo */
             conteo: number;
+        };
+        /** KpisOut */
+        KpisOut: {
+            /**
+             * N
+             * @description CVE en Ω
+             */
+            N: number;
+            /**
+             * Umbral
+             * @description Crítico: baseScore ≥ umbral
+             */
+            umbral: number;
+            /** Criticos */
+            criticos: number;
+            /**
+             * Proporcion Criticos
+             * @description Entre 0 y 1; null si N = 0
+             */
+            proporcion_criticos: number | null;
+            /** Media Puntuacion */
+            media_puntuacion: number | null;
+            /** Mediana Puntuacion */
+            mediana_puntuacion: number | null;
+            /**
+             * Red
+             * @description CVE con vector de ataque NETWORK
+             */
+            red: number;
+            /** Proporcion Red */
+            proporcion_red: number | null;
+            /**
+             * Sin Privilegios
+             * @description CVE con privilegios NONE
+             */
+            sin_privilegios: number;
+            /** Proporcion Sin Privilegios */
+            proporcion_sin_privilegios: number | null;
+            /**
+             * Kev
+             * @description CVE en el catálogo KEV de CISA
+             */
+            kev: number;
+            periodo: components["schemas"]["Periodo"];
+            /** Fecha Consulta */
+            fecha_consulta: string | null;
+            /**
+             * Origen
+             * @enum {string}
+             */
+            origen: "simulado" | "api" | "csv";
+        };
+        /** NulosColumna */
+        NulosColumna: {
+            /** Columna */
+            columna: string;
+            /**
+             * Antes
+             * @description Nulos en lo descargado
+             */
+            antes: number;
+            /**
+             * Despues
+             * @description Nulos en Ω
+             */
+            despues: number;
+        };
+        /** PasoDepuracionOut */
+        PasoDepuracionOut: {
+            /**
+             * Paso
+             * @description "4.1" … "4.7", como en el notebook
+             */
+            paso: string;
+            /** Descripcion */
+            descripcion: string;
+            /**
+             * Antes
+             * @description Filas antes del paso
+             */
+            antes: number;
+            /** Despues */
+            despues: number;
+            /** Eliminados */
+            eliminados: number;
+            /** Justificacion */
+            justificacion: string;
         };
         /**
          * Periodo
@@ -876,7 +1122,10 @@ export interface components {
         /** ResumenDatos */
         ResumenDatos: {
             periodo: components["schemas"]["Periodo"];
-            /** Descargados */
+            /**
+             * Descargados
+             * @description Filas descargadas, con los duplicados
+             */
             descargados: number;
             /**
              * Rechazados
@@ -884,13 +1133,25 @@ export interface components {
              */
             rechazados: number;
             /**
+             * Duplicados
+             * @description Filas con un cve_id ya visto (queda la más reciente)
+             * @default 0
+             */
+            duplicados: number;
+            /**
              * Sin Puntuacion
              * @description CVE sin puntuación CVSS
              */
             sin_puntuacion: number;
             /**
+             * Formato Invalido
+             * @description CVE cuya puntuación no es un número entre 0 y 10
+             * @default 0
+             */
+            formato_invalido: number;
+            /**
              * N
-             * @description Tamaño del espacio muestral Ω
+             * @description Tamaño del espacio muestral Ω: descargados − rechazados − duplicados − sin puntuación − formato inválido
              */
             N: number;
             /**
@@ -900,6 +1161,11 @@ export interface components {
              * @enum {string}
              */
             origen: "simulado" | "api" | "csv";
+            /**
+             * Fecha Consulta
+             * @description Cuándo se consultó la NVD (UTC); null con datos simulados o de un CSV
+             */
+            fecha_consulta?: string | null;
         };
         /** Salud */
         Salud: {
@@ -929,6 +1195,15 @@ export interface components {
             BC: components["schemas"]["ConteoProb"];
             /** @description A ∩ B ∩ C */
             ABC: components["schemas"]["ConteoProb"];
+        };
+        /** ValidacionOut */
+        ValidacionOut: {
+            /** Nombre */
+            nombre: string;
+            /** Cumple */
+            cumple: boolean;
+            /** Detalle */
+            detalle: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -1118,6 +1393,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResumenDatos"];
+                };
+            };
+        };
+    };
+    calidad_api_datos_calidad_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalidadOut"];
                 };
             };
         };
@@ -1376,7 +1671,97 @@ export interface operations {
             };
         };
     };
+    kpis_api_dashboard_kpis_get: {
+        parameters: {
+            query?: {
+                umbral?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpisOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     exportar_cve_api_exportar_cve_get: {
+        parameters: {
+            query?: {
+                umbral?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archivo CSV (UTF-8 con BOM, para Excel) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exportar_crudo_api_exportar_crudo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description JSON de la NVD comprimido (.json.gz) o, si no lo hay, el CSV sin depurar */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/gzip": unknown;
+                    "text/csv": unknown;
+                };
+            };
+            /** @description El conjunto cargado no tiene archivo guardado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    exportar_calidad_api_exportar_calidad_get: {
         parameters: {
             query?: never;
             header?: never;

@@ -186,7 +186,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 - **Necesita:** B16.
 - **Listo cuando:** la función pura tiene su prueba.
 
-**B19 (M) Reporte de calidad y bases para entregar.**
+**[x] B19 (M) Reporte de calidad y bases para entregar.**
 - **Qué:**
   - Nuevo `GET /api/datos/calidad` con los pasos de B17, los nulos por columna antes y después, las frecuencias de dominio, los atípicos de B18 y la conciliación.
   - `ResumenDatos` gana `duplicados`, `formato_invalido` y `fecha_consulta`, que sale del `guardado` de los metadatos actuales.
@@ -198,7 +198,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 - **Listo cuando:** `/api/datos/calidad` responde con datos reales y simulados, y las tres descargas funcionan.
 - **El frontend lo nota en:** **FB7** (página de calidad) y FG1 (fecha de consulta).
 
-**B20 (S) Consulta por rango de fechas.**
+**[x] B20 (S) Consulta por rango de fechas.**
 - **Qué:** se mantiene la consulta por rango (`pubStartDate`/`pubEndDate`), paginada y en tramos de hasta 120 días, que ya existe en `ClienteNVD` y `nvd/periodos.py`.
   - **No** se descarga día por día como en el notebook: con 120 días serían más de 120 consultas.
   - El conteo **por día** se calcula después, agrupando por `publicado`.
@@ -237,7 +237,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
   - `GET /api/dashboard/privilegios` y `GET /api/dashboard/fuentes?top=10`.
 - **El frontend lo nota en:** FB6 y FB8.
 
-**B24 (S) Indicadores clave.**
+**[x] B24 (S) Indicadores clave.**
 - **Qué:** `GET /api/dashboard/kpis` devuelve N, críticos, % críticos, media y mediana de `base_score`, % de red, % sin privilegios, KEV, periodo, `fecha_consulta` y `origen`.
 - **El frontend lo nota en:** FB6 y FG1.
 
@@ -411,7 +411,7 @@ Además:
 |---|---|---|---|---|
 | `GET /api/datos/calidad` | Nueva | B19 | Front B (FB7) | Sí |
 | `GET /api/datos/resumen` | Gana `duplicados` y `formato_invalido` (ya, con B17) y `fecha_consulta` (B19). ⚠ `descargados` ahora cuenta las filas crudas, con duplicados | B17, B19 | Los dos (FG1) | Sí |
-| `GET /api/exportar/crudo`, `/calidad` | Nuevas (CSV/JSON) | B19 | Front B | No |
+| `GET /api/exportar/crudo`, `/calidad` | Nuevas. `crudo`: JSON de la NVD comprimido (`.json.gz`) si viene de una descarga; CSV si viene de un CSV subido o de los simulados | B19 | Front B | No |
 | `GET /api/dashboard/*` | Aceptan `desde`, `hasta`, `severidad`, `vector` y `privilegios` | B21 | Front B (FB8) | Sí |
 | `GET /api/dashboard/kpis`, `/critico-por`, `/cruce`, `/privilegios`, `/fuentes` | Nuevas | B23, B24 | Front B (FB6, FB8) | Sí |
 | `POST /api/binomial` | Sin vector ni privilegios; gana `n_max_recomendado` y `supuestos` | B26 | Front A (FA7) | **Sí, y rompe lo actual** |
@@ -421,14 +421,15 @@ Además:
 
 ### Ejemplos para maquetar antes de que exista el endpoint
 
-La forma es la prevista; **los números son ilustrativos**. Cuando el endpoint esté hecho, manda la forma que aparece en `/docs`.
+**Los números son ilustrativos.** `kpis` y `calidad` ya existen (iteración 2 del backend): esta es su forma real, recortada. Lo que manda es `/docs` y `src/api/schema.d.ts`. Las proporciones van entre 0 y 1; el porcentaje lo arma el frontend con `formato.ts`.
 
 `GET /api/dashboard/kpis`
 ```json
 {
-  "N": 3559, "criticos": 311, "pct_criticos": 0.087,
-  "media_score": 6.9, "mediana_score": 7.0,
-  "pct_red": 0.83, "pct_sin_privilegios": 0.55, "kev": 4,
+  "N": 3559, "umbral": 9.0, "criticos": 311, "proporcion_criticos": 0.087,
+  "media_puntuacion": 6.9, "mediana_puntuacion": 7.0,
+  "red": 2958, "proporcion_red": 0.83, "sin_privilegios": 1960, "proporcion_sin_privilegios": 0.55,
+  "kev": 4,
   "periodo": { "inicio": "2026-11-12", "fin": "2026-11-18" },
   "fecha_consulta": "2026-11-19T01:57:03Z", "origen": "api"
 }
@@ -437,6 +438,7 @@ La forma es la prevista; **los números son ilustrativos**. Cuando el endpoint e
 `GET /api/datos/calidad` (resumido)
 ```json
 {
+  "resumen": { "...": "lo mismo que GET /api/datos/resumen" },
   "pasos": [
     { "paso": "4.2", "descripcion": "Excluir Rejected", "antes": 3645, "despues": 3623,
       "eliminados": 22, "justificacion": "No son vulnerabilidades reales" },
@@ -444,7 +446,12 @@ La forma es la prevista; **los números son ilustrativos**. Cuando el endpoint e
       "eliminados": 64, "justificacion": "Sin CVSS no se puede clasificar" }
   ],
   "nulos": [ { "columna": "cwe", "antes": 410, "despues": 380 } ],
-  "atipicos": [ { "columna": "n_referencias", "limite_superior": 14, "cantidad": 95 } ],
+  "dominios": [ { "columna": "severidad", "fuera_de_dominio": 0,
+      "valores": [ { "categoria": "HIGH", "conteo": 1500, "proporcion": 0.42 } ] } ],
+  "atipicos": [ { "variable": "n_referencias", "q1": 2, "q3": 7, "limite_inferior": -5.5,
+      "limite_superior": 14.5, "cantidad": 95, "nota": "…se marcan y no se eliminan" },
+    { "variable": "cve_por_dia", "...": "igual, con el volumen diario" } ],
+  "validaciones": [ { "nombre": "cve_id únicos", "cumple": true, "detalle": "0 ids repetidos en Ω" } ],
   "conciliacion": { "descargados": 3645, "eliminados": 86, "N": 3559, "cuadra": true }
 }
 ```

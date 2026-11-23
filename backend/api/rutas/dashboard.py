@@ -5,9 +5,11 @@ from api.esquemas import (
     DistribucionOut,
     HistogramaOut,
     IntervaloHistograma,
+    KpisOut,
     PuntoSerie,
     SerieDiariaOut,
 )
+from nvd.extraccion import COL_KEV
 from stats.descriptiva import (
     Categoria,
     distribucion,
@@ -15,7 +17,15 @@ from stats.descriptiva import (
     resumen_numerico,
     serie_diaria as calcular_serie_diaria,
 )
-from stats.eventos import COL_CWE, COL_PUBLICADO, COL_PUNTUACION, COL_SEVERIDAD, COL_VECTOR
+from stats.eventos import (
+    COL_CWE,
+    COL_PUBLICADO,
+    COL_PUNTUACION,
+    COL_SEVERIDAD,
+    COL_VECTOR,
+    Criterios,
+    contar_eventos,
+)
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -74,4 +84,33 @@ def cwe(top: int = Query(10, ge=1, le=50)) -> DistribucionOut:
     return DistribucionOut(
         total=int(df[COL_CWE].notna().sum()),
         categorias=_distribucion(categorias).categorias,
+    )
+
+@router.get("/kpis", response_model=KpisOut)
+def kpis(umbral: float = Query(9.0, ge=0, le=10)) -> KpisOut:
+    """Indicadores clave del conjunto: los mismos conteos que los eventos A, B y C
+    (crítico, por red y sin privilegios), más la puntuación media y el KEV."""
+    df = fuente.dataframe()
+    datos = fuente.resumen()
+    c = contar_eventos(df, Criterios(umbral=umbral))
+    r = resumen_numerico(df[COL_PUNTUACION])
+
+    def proporcion(conteo: int) -> float | None:
+        return conteo / c.N if c.N else None
+
+    return KpisOut(
+        N=c.N,
+        umbral=umbral,
+        criticos=c.A,
+        proporcion_criticos=proporcion(c.A),
+        media_puntuacion=r.media,
+        mediana_puntuacion=r.mediana,
+        red=c.B,
+        proporcion_red=proporcion(c.B),
+        sin_privilegios=c.C,
+        proporcion_sin_privilegios=proporcion(c.C),
+        kev=int(df[COL_KEV].fillna(False).astype(bool).sum()),
+        periodo=datos.periodo,
+        fecha_consulta=datos.fecha_consulta,
+        origen=datos.origen,
     )
