@@ -30,11 +30,11 @@ Todo está en `frontend/src/`. No hace falta copiar nada: se importa con `@/`.
 
 | Función | Ejemplo | Resultado |
 |---|---|---|
-| `numero(15922)` | miles con punto | «15.922» |
+| `numero(55399)` | miles con punto | «55.399» |
 | `porcentaje(0.0874)` | coma decimal y espacio duro | «8,7 %» |
 | `fraccion(311, 3559)` | porcentaje con la fracción | «8,7 % (311 de 3.559)» |
 | `decimal4(x)` | solo dentro de «Ver cálculo» | «0,0874» |
-| `fechaCorta`, `periodo`, … | fechas sin desfase de un día | «23 oct 2026» |
+| `fechaCorta`, `periodo`, … | fechas sin desfase de un día | «26 jul 2026» |
 
 Un `null` se muestra como «—», no como «NaN %».
 

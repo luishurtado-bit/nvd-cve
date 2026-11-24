@@ -1,7 +1,7 @@
 export interface PasoCalculo {
   /** La fórmula con letras: «p = K / N». */
   formula: string
-  /** La misma fórmula con los números puestos: «1.381 / 15.922». */
+  /** La misma fórmula con los números puestos: «6.217 / 55.399». */
   sustituida?: string
   resultado: string
 }

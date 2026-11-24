@@ -161,7 +161,7 @@ El periodo lo elige quien usa la aplicación: cualquier rango de fechas. El de e
    python -m nvd.descargar 2026-07-26 2026-11-22
    ```
 
-   Pagina de a 2000 CVE, respeta el límite de solicitudes y reintenta ante errores. Al terminar muestra descargados, rechazados, duplicados, sin puntuación, formato inválido y N. Un mes son unos 17 000 CVE (9 páginas) y 120 días, unos 70 000 (35 páginas). Sin clave la NVD obliga a esperar 6 s entre solicitudes, así que 120 días tardan unos 3 o 4 minutos; con clave es bastante menos.
+   Pagina de a 2000 CVE, respeta el límite de solicitudes y reintenta ante errores. Al terminar muestra descargados, rechazados, duplicados, sin puntuación, formato inválido y N. Un mes son unos 17 000 CVE (9 páginas) y 120 días, unos 60 000 (31 páginas; el periodo de la demo trajo 60 145). Sin clave la NVD obliga a esperar 6 s entre solicitudes, así que 120 días tardan unos 3 o 4 minutos; con clave es bastante menos.
 
 2. **Desde la API**, con el cuerpo `{"inicio": "AAAA-MM-DD", "fin": "AAAA-MM-DD"}`:
    - `POST /api/datos/cargar` responde cuando termina la descarga. Sirve para periodos cortos y acepta hasta 366 días.

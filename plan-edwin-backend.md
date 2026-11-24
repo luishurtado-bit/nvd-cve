@@ -14,7 +14,7 @@ Resumen de **lo mío** del [plan de trabajo v2](plan-de-trabajo-v2.md), sección
 | 2 | Calidad, bases y kpis | B19, B20, B24 | FB7, FG1, FB6 (Gaby) | [x] hecha (`f6708cf`) |
 | 3 | Descriptivo | B21, B22, B23 | FB6, FB8 (Gaby) | [x] hecha (`928476f`) |
 | 4 | Estadística clara | B26, B27 | FA7, FA5 (Luis) | [x] hecha (`10adc5f`) |
-| 5 | Demo y cierre | B13, B11, B12, B28 | FC1 a FC4 | [x] hecha, pendiente de commit (falta probar `docker build` y la demo de 120 días) |
+| 5 | Demo y cierre | B13, B11, B12, B28 | FC1 a FC4 | [x] hecha (`825b8c0`); la demo de 120 días está en `data/demo/` (falta probar `docker build`) |
 
 ## Ya existía antes del plan v2
 
@@ -128,8 +128,8 @@ Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 365 prue
 ## Iteración 5: demo y cierre (B13 + B11 + B12 + B28)
 
 - [x] **B13** Conjunto para la demo.
-  - [x] Descarga y copia a `data/demo/` (CSV y metadatos). **Hoy hay un mes** (23 oct–22 nov, N = 15 922).
-  - [ ] **Reemplazarlo por el periodo de 120 días** (la corres tú con tu clave; ver README, «Datos de la demo»).
+  - [x] Descarga y copia a `data/demo/` (CSV y metadatos). Quedó el periodo definitivo de **120 días** (26 jul–22 nov de 2026, consultado el 24 nov): 60 145 descargados, N = 55 399.
+  - [x] Reemplazado el mes de prueba (23 oct–22 nov, N = 15 922) por el periodo de 120 días.
   - [x] Excepción en `.gitignore` y carga de `data/demo/` al arrancar si no hay otro (`tests/test_arranque.py`).
   - [x] Pruebas del flujo completo con datos sintéticos (`tests/test_flujo.py`: un caso por paso 4.1 a 4.7 + conciliación + reinicio) y una prueba de que la demo del repositorio carga y cuadra.
   - [x] Comprobación cruzada con el notebook (12–18 nov): descargados, rechazados y duplicados coinciden exactamente; los sin puntuación difieren por la fecha de consulta (ver plan v2, B13).
@@ -147,7 +147,7 @@ Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 516 prue
 2. **Tiempo de descarga:** sin clave son 6 s por solicitud (unos 3 o 4 minutos para 120 días). Las pruebas nunca tocan la red.
 3. **Cambios que rompen la API:** el significado de `descargados` (iteración 1) y la binomial (iteración 4). Falta avisar a Luis y a Gaby antes de unir.
 4. **`docker build` sin probar:** no hay Docker en la máquina del backend. Lo más probable que falle: la versión de Python de la imagen (`python:3.14-slim`; se cambia con `--build-arg PYTHON_VERSION=3.13`) o `npm ci` si el `package-lock.json` no coincide con la plataforma. Probarlo en una máquina con Docker antes de la sustentación; el plan B es `npm run build` + `uvicorn` (README).
-5. **La demo tiene un mes, no 120 días:** hay que descargar el periodo definitivo y reemplazar el de `data/demo/` antes de las capturas y del informe, porque las cifras del informe salen de ese conjunto.
+5. ~~**La demo tiene un mes, no 120 días**~~ Resuelto: `data/demo/` tiene el periodo definitivo de 120 días y las cifras del informe salen de ese conjunto.
 
 ## Registro
 
@@ -158,4 +158,4 @@ Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 516 prue
 | 2026-11-23 | 2 · Calidad, bases y kpis | f6708cf | 292 pasan |
 | 2026-11-23 | 3 · Descriptivo | 928476f | 321 pasan |
 | 2026-11-23 | 4 · Estadística clara | 10adc5f | 365 pasan |
-| 2026-11-23 | 5 · Demo y cierre | (sin commit) | 516 pasan |
+| 2026-11-23 | 5 · Demo y cierre | 825b8c0 | 516 pasan |

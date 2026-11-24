@@ -21,7 +21,7 @@ function esNumero(valor: number | null | undefined): valor is number {
   return typeof valor === 'number' && Number.isFinite(valor)
 }
 
-/** «15.922», «6,9». Sin dato (null, undefined, NaN) devuelve «—», nunca «NaN». */
+/** «55.399», «6,9». Sin dato (null, undefined, NaN) devuelve «—», nunca «NaN». */
 export function numero(valor: number | null | undefined, decimales = 0): string {
   return esNumero(valor) ? formateador(decimales).format(valor) : SIN_DATO
 }
@@ -35,7 +35,7 @@ export function porcentaje(proporcion: number | null | undefined, decimales = 1)
   return `${numero(valor, decimales)}${ESPACIO}%`
 }
 
-/** «8,7 % (1.381 de 15.922)». Con total 0 no hay proporción: devuelve «0 de 0». */
+/** «11,2 % (6.217 de 55.399)». Con total 0 no hay proporción: devuelve «0 de 0». */
 export function fraccion(parte: number | null | undefined, total: number | null | undefined, decimales = 1): string {
   if (!esNumero(parte) || !esNumero(total)) return SIN_DATO
   if (total === 0) return `${numero(parte)} de ${numero(total)}`
@@ -62,7 +62,7 @@ function esValida(fecha: Date): boolean {
   return !Number.isNaN(fecha.getTime())
 }
 
-/** «23 oct 2026». */
+/** «26 jul 2026». */
 export function fechaCorta(texto: string | null | undefined): string {
   if (!texto) return SIN_DATO
   const fecha = leerFecha(texto)
@@ -104,7 +104,7 @@ export function fechaHora(texto: string | null | undefined): string {
   return `${de('day')} ${de('month').replace('.', '')} ${de('year')}, ${de('hour')}:${de('minute')}`
 }
 
-/** «23 oct 2026 – 22 nov 2026», o «sin periodo» si el conjunto no lo trae. */
+/** «26 jul 2026 – 22 nov 2026», o «sin periodo» si el conjunto no lo trae. */
 export function periodo(p: { inicio?: string | null; fin?: string | null } | null | undefined): string {
   if (!p?.inicio || !p?.fin) return 'sin periodo'
   return `${fechaCorta(p.inicio)} – ${fechaCorta(p.fin)}`

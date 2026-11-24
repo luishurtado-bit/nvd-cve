@@ -10,7 +10,7 @@ import { useDatos } from '@/contexto/datos'
 const DIAS_POR_TRAMO = 120
 const MAX_DIAS = 366
 const DIA_EN_MS = 86_400_000
-const DIAS_POR_DEFECTO = 30
+const DIAS_POR_DEFECTO = 120
 
 const iso = (fecha: Date) => fecha.toISOString().slice(0, 10)
 
@@ -23,7 +23,7 @@ function diasEntre(inicio: string, fin: string): number | null {
 function fechasDeHoy() {
   const ahora = Date.now()
   const ayer = ahora - DIA_EN_MS
-  return { hoy: iso(new Date(ahora)), ultimoMes: { inicio: iso(new Date(ayer - (DIAS_POR_DEFECTO - 1) * DIA_EN_MS)), fin: iso(new Date(ayer)) } }
+  return { hoy: iso(new Date(ahora)), ultimosDias: { inicio: iso(new Date(ayer - (DIAS_POR_DEFECTO - 1) * DIA_EN_MS)), fin: iso(new Date(ayer)) } }
 }
 
 interface Props {
@@ -36,12 +36,12 @@ interface Props {
 export default function FormularioDescarga({ ocupado, onDescargar }: Props) {
   const { resumen } = useDatos()
   // La fecha se toma una vez, al abrir el formulario: durante el render no se puede leer el reloj
-  const [{ hoy, ultimoMes }] = useState(fechasDeHoy)
-  // Por defecto, el periodo ya cargado; si son datos simulados, el último mes hasta ayer
+  const [{ hoy, ultimosDias }] = useState(fechasDeHoy)
+  // Por defecto, el periodo ya cargado; si son datos simulados, los últimos 120 días hasta ayer
   const porDefecto =
     resumen && resumen.origen !== 'simulado' && resumen.periodo.inicio && resumen.periodo.fin
       ? { inicio: resumen.periodo.inicio, fin: resumen.periodo.fin }
-      : ultimoMes
+      : ultimosDias
 
   // null = la persona no ha tocado el campo todavía, así que vale el valor por defecto
   const [inicioElegido, setInicio] = useState<string | null>(null)
