@@ -1,0 +1,23 @@
+# Fuera de la imagen: se instalan o se compilan dentro
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/node_modules
+frontend/dist
+
+# Secretos y control de versiones
+.git
+.env
+.env.*
+
+# Datos descargados: solo va la demo (los demás se bajan o se montan como volumen)
+data/*
+!data/demo
+
+# Lo que no hace falta para ejecutar
+backend/tests
+*.md
+*.ipynb
+.vscode
+.claude

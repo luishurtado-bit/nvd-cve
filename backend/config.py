@@ -21,3 +21,8 @@ def dir_datos() -> Path:
     """Carpeta donde se guardan los datos descargados (por defecto, <raíz>/data)."""
     ruta = os.getenv("DIR_DATOS", "").strip()
     return Path(ruta) if ruta else RAIZ / "data"
+
+def dir_demo() -> Path:
+    """Carpeta con el conjunto de la demo, que sí viaja en el repositorio y en la imagen de Docker:
+    <dir_datos>/demo. Se usa al arrancar solo si no hay ninguna descarga propia."""
+    return dir_datos() / "demo"

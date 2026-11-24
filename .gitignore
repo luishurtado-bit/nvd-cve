@@ -13,6 +13,11 @@ frontend/dist/
 .env
 data/*
 !data/.gitkeep
+# El conjunto de la demo sí se sube: el CSV de 20 columnas y sus metadatos, no la base original (.gz)
+!data/demo/
+data/demo/*
+!data/demo/*.csv
+!data/demo/*.json
 
 # Editor / sistema
 .vscode/

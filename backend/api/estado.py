@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 import pandas as pd
+import config
 from api.esquemas import Origen, Periodo, ResumenDatos
 from nvd import almacen
 from nvd.depuracion import ResultadoDepuracion, depurar
@@ -65,14 +66,18 @@ def reiniciar() -> None:
     _actual = None
 
 def cargar_ultimo() -> Conjunto | None:
-    """Carga el último conjunto guardado en data/, si hay; si falla, sigue con los simulados."""
-    ruta = almacen.ultimo()
-    if ruta is None:
-        return None
-    try:
-        conjunto = cargar(ruta)
-    except (OSError, ValueError, KeyError) as e:
-        log.warning("No se pudo cargar %s: %s. Se usan los datos simulados.", ruta, e)
-        return None
-    log.info("Datos cargados de %s (N = %d)", ruta.name, conjunto.resumen.N)
-    return conjunto
+    """Al arrancar: el último conjunto descargado en data/ y, si no hay ninguno (o no se puede
+    leer), el de la demo en data/demo/. Sin ninguno de los dos, se siguen usando los simulados."""
+    for carpeta, nombre in ((config.dir_datos(), "Datos"), (config.dir_demo(), "Datos de la demo")):
+        ruta = almacen.ultimo(carpeta)
+        if ruta is None:
+            continue
+        try:
+            conjunto = cargar(ruta)
+        except (OSError, ValueError, KeyError) as e:
+            log.warning("No se pudo cargar %s: %s", ruta, e)
+            continue
+        log.info("%s cargados de %s (N = %d)", nombre, ruta.name, conjunto.resumen.N)
+        return conjunto
+    log.warning("No hay datos guardados ni de la demo: se usan los datos simulados")
+    return None

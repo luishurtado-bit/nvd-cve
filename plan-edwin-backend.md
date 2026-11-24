@@ -13,8 +13,8 @@ Resumen de **lo mío** del [plan de trabajo v2](plan-de-trabajo-v2.md), sección
 | 1 | Datos y depuración | B16, B17, B18 | B19 | [x] hecha (`6fc6746`) |
 | 2 | Calidad, bases y kpis | B19, B20, B24 | FB7, FG1, FB6 (Gaby) | [x] hecha (`f6708cf`) |
 | 3 | Descriptivo | B21, B22, B23 | FB6, FB8 (Gaby) | [x] hecha (`928476f`) |
-| 4 | Estadística clara | B26, B27 | FA7, FA5 (Luis) | [x] hecha, pendiente de commit |
-| 5 | Demo y cierre | B13, B11, B12, B28 | FC1 a FC4 | [ ] |
+| 4 | Estadística clara | B26, B27 | FA7, FA5 (Luis) | [x] hecha (`10adc5f`) |
+| 5 | Demo y cierre | B13, B11, B12, B28 | FC1 a FC4 | [x] hecha, pendiente de commit (falta probar `docker build` y la demo de 120 días) |
 
 ## Ya existía antes del plan v2
 
@@ -42,6 +42,10 @@ Resumen de **lo mío** del [plan de trabajo v2](plan-de-trabajo-v2.md), sección
 - **Registro:** quedan registradas las exportaciones (`exportar_cve`, `exportar_crudo`, `exportar_calidad`); `GET /datos/calidad` y `/dashboard/kpis` son consultas de pantalla y no se registran.
 - **Filtros:** `severidad`, `vector` y `privilegios` aceptan varios valores (parámetro repetido); fechas incluidas en los dos extremos; `hasta < desde` → 422. Se leen con un `Depends` (`leer_filtros`) y se aplican con `fuente.filtrar`, igual en todas las rutas.
 - **Agrupaciones:** las filas sin dato no entran en los grupos; `critico-por` informa cuántas son (`sin_dato`). `cruce` admite otras variables además de severidad × vector. La serie conserva el nombre `serie-diaria` para no romper al frontend, aunque ya agrupa por semana o mes.
+- **Demo:** al arrancar, `estado.cargar_ultimo()` busca en `data/` y, si no hay nada (o no se puede leer), en `data/demo/` (`config.dir_demo()` = `dir_datos()/demo`, así las pruebas lo aíslan con `DIR_DATOS`). En `data/demo/` van solo el CSV y el JSON de metadatos; el `.crudo.json.gz` queda fuera de Git. Si hay varios CSV en esa carpeta se carga el más reciente: el README dice que hay que borrar los anteriores.
+- **Frontend servido por el backend:** `FrontendEstatico` devuelve `index.html` para rutas sin extensión (el front usa `BrowserRouter`) y deja 404 las de `/api/` y los archivos que no existen. Las pruebas encontraron un error solo de Windows: allí `StaticFiles` entrega la ruta con `\` y el guardia de `/api/` no la reconocía.
+- **Docker:** no hay Docker en esta máquina, así que el `Dockerfile` **no está probado**. Sí se probó: `npm run build`, y el servidor real en una carpeta con la misma disposición que la imagen (`/app/backend`, `/app/frontend/dist`, `/app/data/demo`, sin `.env`).
+- **Documentación vigilada por pruebas:** `test_endpoints.py` (un caso por ruta + tabla endpoint → pruebas) y `test_documentacion.py` (contrato, diccionario y enlaces).
 - **Binomial:** `BinomialIn` rechaza campos de más (`extra="forbid"`): con el contrato anterior (`criterios`) ahora responde 422. Se prefirió eso a ignorarlo, porque ignorarlo habría descartado en silencio el umbral que escribe el usuario.
 - **`n_max_recomendado`:** el mayor n con n < 0,05·N, calculado con enteros (`(N − 1) // 20`). El plan v2 decía ⌊0,05·N⌋, que con N = 1000 daba 50 aunque n = 50 ya dispara el aviso; así el aviso, el límite y el supuesto de independencia siempre coinciden. El aviso `n_grande_frente_a_N` también pasó a enteros.
 - **Supuestos:** `n_fijo` y `dos_resultados` siempre cumplen (son por construcción). `p_constante` avisa si p sale de menos de 30 CVE; con p a mano cumple y lo dice en el texto. `independencia` avisa si n > `n_max_recomendado`. Las `advertencias` de antes siguen igual.
@@ -123,24 +127,27 @@ Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 365 prue
 
 ## Iteración 5: demo y cierre (B13 + B11 + B12 + B28)
 
-- [ ] **B13** Conjunto para la demo.
-  - [ ] Descarga de 120 días (la corro yo con mi clave NVD) y copia a `data/demo/` (CSV y metadatos).
-  - [ ] Excepción en `.gitignore` y carga de `data/demo/` al arrancar si no hay otro.
-  - [ ] Pruebas del flujo completo con datos sintéticos (un caso por paso + conciliación).
-  - [ ] Opcional: pasar el JSON crudo del notebook por el backend y comparar conteos.
-- [ ] **B11** Una prueba por endpoint (tabla endpoint → prueba).
-- [ ] **B12** `Dockerfile`, `.dockerignore` y corregir `frontend_dist` → `frontend/dist` en `backend/api/main.py`.
-- [ ] **B28** `README.md`, diccionario de las 20 variables y tabla del contrato.
-- [ ] `pytest` en verde y `docker run` probado.
+- [x] **B13** Conjunto para la demo.
+  - [x] Descarga y copia a `data/demo/` (CSV y metadatos). **Hoy hay un mes** (23 oct–22 nov, N = 15 922).
+  - [ ] **Reemplazarlo por el periodo de 120 días** (la corres tú con tu clave; ver README, «Datos de la demo»).
+  - [x] Excepción en `.gitignore` y carga de `data/demo/` al arrancar si no hay otro (`tests/test_arranque.py`).
+  - [x] Pruebas del flujo completo con datos sintéticos (`tests/test_flujo.py`: un caso por paso 4.1 a 4.7 + conciliación + reinicio) y una prueba de que la demo del repositorio carga y cuadra.
+  - [x] Comprobación cruzada con el notebook (12–18 nov): descargados, rechazados y duplicados coinciden exactamente; los sin puntuación difieren por la fecha de consulta (ver plan v2, B13).
+- [x] **B11** Una prueba por endpoint (`tests/test_endpoints.py`): 30 rutas, tabla endpoint → pruebas, y falla si una ruta no tiene caso.
+- [x] **B12** `Dockerfile`, `.dockerignore` y `frontend_dist` → `frontend/dist` en `backend/api/main.py`, con la recarga de rutas del frontend.
+  - [ ] **`docker build` y `docker run` sin probar** (no hay Docker en esta máquina).
+- [x] **B28** `README.md`, `docs/diccionario-de-datos.md` y `docs/contrato-api.md`, con pruebas que las mantienen al día (`tests/test_documentacion.py`).
+- [x] `pytest` en verde (516 pruebas). `npm run build` del frontend en verde.
 
-Hecho: —
+Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 516 pruebas pasan
 
 ## Riesgos
 
-1. **Memoria al descargar 120 días:** unos 60 000 objetos `cve`. Se mide en la iteración 2; si molesta, se escribe el `.gz` por tramos.
-2. **Tiempo de descarga:** sin clave son al menos 6 s por solicitud (unos 3 minutos para 120 días). Las pruebas nunca tocan la red.
-3. **Cambios que rompen la API:** el significado de `descargados` (iteración 1) y la binomial (iteración 4). Se avisa a los dos frontends.
-4. **Orden:** B26 y B27 no dependen de nada; se pueden adelantar si Luis queda bloqueado.
+1. ~~**Memoria al descargar 120 días**~~ Resuelto en la iteración 2: con 60 000 CVE el pico fue de 63 MB.
+2. **Tiempo de descarga:** sin clave son 6 s por solicitud (unos 3 o 4 minutos para 120 días). Las pruebas nunca tocan la red.
+3. **Cambios que rompen la API:** el significado de `descargados` (iteración 1) y la binomial (iteración 4). Falta avisar a Luis y a Gaby antes de unir.
+4. **`docker build` sin probar:** no hay Docker en la máquina del backend. Lo más probable que falle: la versión de Python de la imagen (`python:3.14-slim`; se cambia con `--build-arg PYTHON_VERSION=3.13`) o `npm ci` si el `package-lock.json` no coincide con la plataforma. Probarlo en una máquina con Docker antes de la sustentación; el plan B es `npm run build` + `uvicorn` (README).
+5. **La demo tiene un mes, no 120 días:** hay que descargar el periodo definitivo y reemplazar el de `data/demo/` antes de las capturas y del informe, porque las cifras del informe salen de ese conjunto.
 
 ## Registro
 
@@ -150,4 +157,5 @@ Hecho: —
 | 2026-11-23 | 1 · Datos y depuración | 6fc6746 | 268 pasan |
 | 2026-11-23 | 2 · Calidad, bases y kpis | f6708cf | 292 pasan |
 | 2026-11-23 | 3 · Descriptivo | 928476f | 321 pasan |
-| 2026-11-23 | 4 · Estadística clara | (sin commit) | 365 pasan |
+| 2026-11-23 | 4 · Estadística clara | 10adc5f | 365 pasan |
+| 2026-11-23 | 5 · Demo y cierre | (sin commit) | 516 pasan |

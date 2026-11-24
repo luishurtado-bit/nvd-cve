@@ -207,11 +207,12 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 - **Necesita:** B19.
 - **Listo cuando:** una descarga de 120 días queda guardada con la base cruda, la limpia y la `fecha_consulta`.
 
-**B13 (S) Conjunto para la demo y pruebas del flujo completo.**
+**[x] B13 (S) Conjunto para la demo y pruebas del flujo completo.**
 - **Qué:**
-  - El equipo elige el periodo de 120 días. Se descarga una vez y se guarda en `data/demo/` (con una excepción en `.gitignore`), para no depender de la API en la sustentación. El backend lo carga al arrancar si no hay otro.
+  - El equipo elige el periodo de 120 días. Se descarga una vez y se copia a `data/demo/` (con una excepción en `.gitignore`), para no depender de la API en la sustentación. El backend lo carga al arrancar si no hay una descarga propia en `data/`. Van el CSV de 20 columnas **sin depurar** y sus metadatos; la base original (`.crudo.json.gz`) no se sube a Git. El procedimiento está en el README, sección «Datos de la demo».
+  - **Estado:** `data/demo/` tiene hoy un **mes** (23 oct al 22 nov, N = 15 922) para probar. Falta reemplazarlo por el periodo de 120 días cuando el equipo lo decida.
   - Pruebas del flujo con datos sintéticos: un caso por paso de limpieza más la conciliación. No dependen del periodo.
-  - Opcional: pasar por el backend el JSON crudo del notebook y comprobar que los conteos por paso coinciden. Valida la lógica, no fija el periodo.
+  - Comprobación cruzada con el notebook, hecha con datos reales del 12 al 18 de nov: descargados (3645), rechazados (22) y duplicados (0) **coinciden exactamente**. Los sin puntuación bajaron de 64 a 20 porque la NVD puntuó 44 CVE más entre la consulta del notebook (19 nov) y la nuestra (24 nov), de ahí N = 3603 y 318 críticos en vez de 3559 y 311. Valida la lógica; no fija el periodo.
 - **Necesita:** B20.
 - **Listo cuando:** el backend arranca sin conexión y muestra el periodo de la demo.
 - **El frontend lo nota en:** desde aquí se puede trabajar con datos reales en lugar de los simulados.
@@ -264,9 +265,9 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 
 ### Fase 8: cierre del backend
 
-- **B11 (S) Pruebas de la API:** una por endpoint, incluidos los nuevos.
-- **B12 (S) Despliegue:** `Dockerfile`, más corregir la ruta del frontend compilado en `backend/api/main.py:34`, que dice `frontend_dist` y debe ser `frontend/dist`. Plan B: ejecutarlo en local.
-- **B28 (S) Documentación:** `README.md`, diccionario de las 20 variables y tabla del contrato.
+- **[x] B11 (S) Pruebas de la API:** una por endpoint, incluidos los nuevos (`tests/test_endpoints.py`: un caso por ruta, la tabla endpoint → pruebas con detalle, y falla si se agrega una ruta sin caso).
+- **[x] B12 (S) Despliegue:** `Dockerfile` y `.dockerignore`, y la ruta del frontend compilado corregida en `backend/api/main.py` (decía `frontend_dist`; ahora `frontend/dist`). El backend devuelve `index.html` al recargar rutas como `/binomial`. ⚠ El `docker build` **no se ha probado** (no hay Docker en la máquina del backend). Plan B: `npm run build` y `uvicorn api.main:app`, como dice el README.
+- **[x] B28 (S) Documentación:** `README.md`, [diccionario de las 20 variables](docs/diccionario-de-datos.md) y [tabla del contrato](docs/contrato-api.md). Una prueba falla si una ruta de la API no está en el contrato o si el diccionario pierde una variable.
 
 ---
 
@@ -531,8 +532,8 @@ El backend entrega primero lo que desbloquea más: **B19** (calidad, para FB7) y
 | Entregable | De dónde sale | Responsable |
 |---|---|---|
 | Dashboard funcional y capturas | Inicio y Descriptivo (FB6, FB8) y FC3 | Front B |
-| Base original o enlace a la fuente | `data/demo/` (JSON crudo) y `/api/exportar/crudo` | Backend |
-| Base limpia | `data/demo/` (CSV) y `/api/exportar/cve` | Backend |
+| Base original o enlace a la fuente | `/api/exportar/crudo` (el JSON de la NVD, `.json.gz`) o `data/demo/` (el mismo conjunto, sin depurar, en CSV) | Backend |
+| Base limpia | `/api/exportar/cve` (CSV con las 20 variables y `critico`) | Backend |
 | Evidencia reproducible | Notebook `nvd-electiva-3.ipynb` (falta subirlo al repositorio), `backend/nvd/` y pruebas | Backend |
 | Informe de máximo 3 páginas: objetivo, fuente, metodología, indicadores, 3 hallazgos, limitaciones y conclusiones | Cifras de FB6 y FB7 | Los tres |
 | Presentación de 15 minutos | FC4 | Los tres |
