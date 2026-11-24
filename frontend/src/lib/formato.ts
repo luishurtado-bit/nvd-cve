@@ -78,6 +78,14 @@ export function fechaLarga(texto: string | null | undefined): string {
   return new Intl.DateTimeFormat(LOCALE, { dateStyle: 'long', timeZone: 'UTC' }).format(fecha)
 }
 
+/** «octubre de 2026». */
+export function mesAnio(texto: string | null | undefined): string {
+  if (!texto) return SIN_DATO
+  const fecha = leerFecha(texto)
+  if (!esValida(fecha)) return SIN_DATO
+  return new Intl.DateTimeFormat(LOCALE, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(fecha)
+}
+
 /** «23 nov 2026, 19:14», en la hora de Colombia. Para marcas de tiempo como la fecha de consulta. */
 export function fechaHora(texto: string | null | undefined): string {
   if (!texto) return SIN_DATO

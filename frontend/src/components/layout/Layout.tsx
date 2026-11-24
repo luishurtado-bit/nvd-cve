@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { ChartColumn, Combine, Database, Moon, Percent, Scale, ShieldAlert, Sun } from 'lucide-react'
+import { ChartColumn, Combine, Database, LayoutDashboard, Moon, Percent, Scale, ShieldAlert, Sun } from 'lucide-react'
 import { api } from '@/api/cliente'
 import BarraContexto from '@/components/layout/BarraContexto'
 import PieFuente from '@/components/layout/PieFuente'
@@ -26,6 +26,7 @@ import { useTema } from '@/hooks/use-tema'
 import { cn } from '@/lib/utils'
 
 const enlaces = [
+  { ruta: '/', texto: 'Inicio', titulo: 'Dashboard de vulnerabilidades CVE', icono: LayoutDashboard },
   {
     ruta: '/datos',
     texto: 'Datos y dashboard',
@@ -45,10 +46,15 @@ const enlaces = [
 
 type EstadoBackend = 'consultando…' | 'ok' | 'sin conexión'
 
+/** `/` solo es la portada; las demás rutas también cubren lo que cuelga de ellas (`/datos/calidad`). */
+function esActiva(pathname: string, ruta: string): boolean {
+  return ruta === '/' ? pathname === '/' : pathname === ruta || pathname.startsWith(`${ruta}/`)
+}
+
 export default function Layout() {
   const { tema, alternar } = useTema()
   const { pathname } = useLocation()
-  const tituloPagina = enlaces.find((e) => pathname.startsWith(e.ruta))?.titulo ?? 'NVD/CVE'
+  const tituloPagina = enlaces.find((e) => esActiva(pathname, e.ruta))?.titulo ?? 'NVD/CVE'
   const [backend, setBackend] = useState<EstadoBackend>('consultando…')
 
   useEffect(() => {
@@ -79,7 +85,7 @@ export default function Layout() {
                 {enlaces.map((e) => (
                   <SidebarMenuItem key={e.ruta}>
                     <SidebarMenuButton
-                      isActive={pathname.startsWith(e.ruta)}
+                      isActive={esActiva(pathname, e.ruta)}
                       tooltip={e.texto}
                       render={<Link to={e.ruta} />}
                     >
