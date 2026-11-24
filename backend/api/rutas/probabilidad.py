@@ -8,6 +8,7 @@ from api.esquemas import (
     EventosOut,
     ReglasIn,
     ReglasOut,
+    TablaContingencia,
     TablaEventos,
 )
 from stats.eventos import Conteos
@@ -15,19 +16,36 @@ from stats.probabilidad import (
     bayes,
     complemento,
     condicional,
+    contingencia,
+    diferencia_independencia,
     probabilidad,
     probabilidad_total,
+    razon_independencia,
     son_independientes,
     union,
 )
 
 router = APIRouter(tags=["probabilidad"])
 
-NOTA_DEPENDENCIA = (
+# Cómo nombrar cada evento dentro de una frase
+NOMBRE = {"A": "A (crítico)", "B": "B (vector de ataque)", "C": "C (privilegios requeridos)"}
+
+NOTA_CON_A = (
     "A se define con baseScore, que el CVSS calcula a partir del vector de ataque "
     "y de los privilegios requeridos: la dependencia entre A y {otro} es una "
     "propiedad de la métrica, no un hallazgo empírico."
 )
+NOTA_B_Y_C = (
+    "B (vector de ataque) y C (privilegios requeridos) son dos métricas distintas del CVSS: "
+    "no hay una fórmula que las ate. Si en estos CVE aparecen relacionadas, es lo observado "
+    "en este periodo y puede cambiar en otro."
+)
+
+def _nota(x: str, y: str) -> str:
+    """Qué significa la relación entre X e Y: según los eventos elegidos, y no siempre de A."""
+    if "A" in (x, y):
+        return NOTA_CON_A.format(otro=NOMBRE[y if x == "A" else x])
+    return NOTA_B_Y_C
 
 def _interseccion(c: Conteos, x: str, y: str) -> int:
     return getattr(c, "".join(sorted(x + y)))
@@ -65,13 +83,14 @@ def reglas(datos: ReglasIn) -> ReglasOut:
     p_y = probabilidad(getattr(c, y), c.N)
     p_xy = probabilidad(_interseccion(c, x, y), c.N)
 
-    nota = None
-    if "A" in (x, y):
-        nota = NOTA_DEPENDENCIA.format(otro=y if x == "A" else x)
+    n_x, n_y, n_xy = getattr(c, x), getattr(c, y), _interseccion(c, x, y)
+    tabla = contingencia(c.N, n_x, n_y, n_xy)
 
     salida = ReglasOut(
         x=x,
         y=y,
+        N=c.N,
+        tabla=TablaContingencia(**vars(tabla)),
         p_x=p_x,
         p_y=p_y,
         p_x_complemento=complemento(p_x),
@@ -79,8 +98,10 @@ def reglas(datos: ReglasIn) -> ReglasOut:
         p_interseccion=p_xy,
         p_union=union(p_x, p_y, p_xy),
         producto=p_x * p_y,
+        diferencia=diferencia_independencia(p_x, p_y, p_xy),
+        razon=razon_independencia(p_x, p_y, p_xy),
         independientes=son_independientes(p_x, p_y, p_xy),
-        nota=nota,
+        nota=_nota(x, y),
     )
     registro.registrar("reglas", datos.model_dump(), salida.model_dump(mode="json"))
     return salida

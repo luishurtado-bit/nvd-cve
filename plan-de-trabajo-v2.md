@@ -243,21 +243,22 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 
 ### Fase 7: apoyo para que la estadística se entienda
 
-**B26 (S) Binomial más clara.**
+**[x] B26 (S) Binomial más clara.**
 - **Qué:**
-  - `BinomialIn` deja de pedir vector y privilegios, que no intervienen en p; solo queda `umbral`.
+  - `BinomialIn` deja de pedir `criterios` (vector y privilegios no intervienen en p); solo queda `umbral`. Si llega el campo `criterios` (o cualquier otro de más), la API responde 422 en vez de ignorarlo: así un umbral editado no se pierde en silencio.
   - La salida, que ya trae `K` y `N`, gana:
-    - `n_max_recomendado = ⌊0,05·N⌋`;
+    - `umbral`, para escribir «crítico = baseScore ≥ 9»;
+    - `n_max_recomendado`: el mayor lote con n < 0,05·N (con N = 3559, 177; con N = 1000, 49, porque n = 50 ya no es menor que 50);
     - `supuestos`: n fijo, dos resultados, p constante e independencia aproximada (n < 0,05·N). Cada uno con estado `cumple` o `advertencia` y un texto corto.
   - Los cálculos no cambian, y las `advertencias` actuales se mantienen.
 - **Dónde:** `api/rutas/binomial.py`, `api/esquemas.py`, `stats/binomial.py`.
 - **El frontend lo nota en:** **FA7**. ⚠ Cambia la forma de la API: hay que regenerar los tipos.
 
-**B27 (S) Reglas más explicables.**
+**[x] B27 (S) Reglas más explicables.**
 - **Qué:**
-  - Se agregan `diferencia = P(X∩Y) − P(X)·P(Y)` y `razon = P(X∩Y) / (P(X)·P(Y))`. Hoy solo se devuelve el sí/no `independientes`, decidido con tolerancia 1e-9.
-  - Se agregan los 4 conteos de la tabla 2×2: X∩Y, X∩Yᶜ, Xᶜ∩Y y Xᶜ∩Yᶜ.
-  - La `nota` se adapta a los eventos elegidos, no siempre «A y B».
+  - Se agregan `diferencia = P(X∩Y) − P(X)·P(Y)` y `razon = P(X∩Y) / (P(X)·P(Y))` (`null` si P(X)·P(Y) = 0). El sí/no `independientes` sigue, decidido con tolerancia 1e-9, pero el frontend debe mostrar la `razon`.
+  - Se agregan `N` y la `tabla` 2×2 con los 4 conteos: `x_y` (X∩Y), `x_no_y` (X∩Yᶜ), `no_x_y` (Xᶜ∩Y) y `no_x_no_y` (Xᶜ∩Yᶜ). Suman N.
+  - La `nota` se adapta a los eventos elegidos: con A habla de la propiedad de la métrica y nombra al otro evento («A y B (vector de ataque)»); con B y C ya no es `null`, explica que son dos métricas distintas y que la relación es lo observado.
 - **Dónde:** `stats/probabilidad.py`, `api/rutas/probabilidad.py`.
 - **El frontend lo nota en:** **FA5**.
 
@@ -415,8 +416,10 @@ Además:
 | `GET /api/dashboard/*` | Aceptan `desde`, `hasta`, `severidad`, `vector` y `privilegios`. Los tres últimos admiten varios valores repitiendo el parámetro (`?severidad=CRITICAL&severidad=HIGH`) | B21 | Front B (FB8) | Sí |
 | `GET /api/dashboard/kpis`, `/critico-por`, `/cruce`, `/privilegios`, `/fuentes`, `/resumen-numerico` | Nuevas. `critico-por?variable=vector\|privilegios\|version\|fuente`; `cruce?fila=…&columna=…` (por defecto severidad × vector) | B22, B23, B24 | Front B (FB6, FB8) | Sí |
 | `GET /api/dashboard/serie-diaria` | Acepta `agrupar=dia\|semana\|mes` y `umbral`; cada punto gana `criticos` y `proporcion_criticos`. Las semanas empiezan en lunes | B23 | Front B (FB6, FB8) | Sí (sin romper) |
-| `POST /api/binomial` | Sin vector ni privilegios; gana `n_max_recomendado` y `supuestos` | B26 | Front A (FA7) | **Sí, y rompe lo actual** |
-| `POST /api/reglas` | Gana `diferencia`, `razon` y `tabla` 2×2 | B27 | Front A (FA5) | Sí |
+| `POST /api/binomial` | **Rompe:** la entrada pierde `criterios` y gana `umbral` (número, por defecto 9); un campo de más → 422. La salida gana `umbral`, `n_max_recomendado` y `supuestos` | B26 | Front A (FA7) | **Sí, y rompe lo actual** |
+| `POST /api/reglas` | Gana `N`, `tabla` 2×2, `diferencia` y `razon`. La `nota` de B y C ya no es `null` | B27 | Front A (FA5) | Sí (sin romper) |
+| `GET /api/exportar/binomial` | Recibe `umbral` en lugar de `vector` y `privilegios` | B26 | Front A (FA8) | No |
+| `GET /api/exportar/reglas` | El CSV gana `N`, `diferencia`, `razon` y `tabla_x_y`, `tabla_x_no_y`, `tabla_no_x_y`, `tabla_no_x_no_y` | B27 | Front A (FA8) | No |
 
 **Cómo regenerar los tipos:** con el backend corriendo en `localhost:8000`, ejecutar `npm run tipos` dentro de `frontend/`. Se actualiza `src/api/schema.d.ts`. La forma exacta de cada respuesta siempre está en `http://localhost:8000/docs`.
 
@@ -457,18 +460,33 @@ Además:
 }
 ```
 
-`POST /api/binomial`: lo que se agrega
+`POST /api/binomial`: entrada y lo que se agrega a la salida (ya existe; los números son los del ejemplo)
 ```json
+// entrada: { "n": 20, "k": 3, "umbral": 9, "p": null, "confianza": 0.95 }   (sin "criterios")
 {
+  "umbral": 9,
   "n_max_recomendado": 177,
   "supuestos": [
-    { "codigo": "n_fijo", "estado": "cumple", "texto": "El lote tiene un tamaño fijo n = 20" },
-    { "codigo": "dos_resultados", "estado": "cumple", "texto": "Cada CVE es crítico o no lo es" },
-    { "codigo": "p_constante", "estado": "cumple", "texto": "p = 8,7 % es igual para todo el lote" },
-    { "codigo": "independencia", "estado": "cumple", "texto": "n = 20 < 0,05·N = 177" }
+    { "codigo": "n_fijo", "estado": "cumple", "texto": "El lote tiene un tamaño fijo: n = 20 CVE" },
+    { "codigo": "dos_resultados", "estado": "cumple", "texto": "Cada CVE es crítico (baseScore ≥ 9) o no lo es" },
+    { "codigo": "p_constante", "estado": "cumple", "texto": "p = 8,7 % (311 de 3559) es la misma para todos los CVE del lote" },
+    { "codigo": "independencia", "estado": "cumple",
+      "texto": "n = 20 no pasa de 177, el 5 % de N = 3559: sacar sin reemplazo casi no cambia p de un CVE al siguiente" }
   ]
 }
 ```
+`estado` es `"cumple"` o `"advertencia"`; si es `advertencia`, el texto ya explica por qué (lote mayor que el 5 % de N, N menor que 30 o p escrita a mano).
+
+`POST /api/reglas`: lo que se agrega (ya existe)
+```json
+{
+  "N": 3559,
+  "tabla": { "x_y": 290, "x_no_y": 21, "no_x_y": 2668, "no_x_no_y": 580 },
+  "diferencia": 0.0089,
+  "razon": 1.12
+}
+```
+`razon` > 1: ocurren juntos más de lo esperado si fueran independientes («1,12 veces más»); < 1, menos; `null`, un evento imposible.
 
 ---
 

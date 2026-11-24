@@ -113,3 +113,39 @@ def test_posterior_en_los_extremos(prior: float, esperado: float) -> None:
 def test_posterior_con_prior_invalido() -> None:
     with pytest.raises(ValueError):
         posterior(1.2, P_B_DADO_A, P_B_DADO_AC)
+
+# --- B27: diferencia, razón y tabla 2×2 ---
+
+from stats.probabilidad import Contingencia, contingencia, diferencia_independencia, razon_independencia
+
+def test_diferencia_y_razon() -> None:
+    assert diferencia_independencia(0.1, 0.75, 0.09) == pytest.approx(0.015)
+    assert razon_independencia(0.1, 0.75, 0.09) == pytest.approx(1.2)
+    assert razon_independencia(0.5, 0.5, 0.25) == 1.0  # independientes
+
+def test_razon_menor_que_uno_si_ocurren_menos_juntos() -> None:
+    assert razon_independencia(0.5, 0.5, 0.1) == pytest.approx(0.4)
+    assert diferencia_independencia(0.5, 0.5, 0.1) < 0
+
+def test_razon_no_existe_si_un_evento_es_imposible() -> None:
+    assert razon_independencia(0.0, 0.5, 0.0) is None
+    assert diferencia_independencia(0.0, 0.5, 0.0) == 0
+
+def test_razon_y_diferencia_validan_probabilidades() -> None:
+    with pytest.raises(ValueError, match="P\\(A\\)"):
+        razon_independencia(1.5, 0.5, 0.2)
+    with pytest.raises(ValueError, match="P\\(A ∩ B\\)"):
+        diferencia_independencia(0.5, 0.5, -0.1)
+
+def test_contingencia_suma_n() -> None:
+    t = contingencia(1000, 100, 750, 90)
+    assert t == Contingencia(x_y=90, x_no_y=10, no_x_y=660, no_x_no_y=240)
+    assert t.x_y + t.x_no_y + t.no_x_y + t.no_x_no_y == 1000
+
+@pytest.mark.parametrize(
+    "conteos",
+    [(10, 5, 3, 6), (10, 8, 7, 4), (10, 12, 3, 3), (10, 5, 5, -1)],  # n(X ∩ Y) > n(Y); X ∪ Y > N; n(X) > N; negativo
+)
+def test_contingencia_incoherente(conteos: tuple[int, int, int, int]) -> None:
+    with pytest.raises(ValueError, match="incoherentes"):
+        contingencia(*conteos)

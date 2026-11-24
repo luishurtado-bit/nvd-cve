@@ -75,7 +75,7 @@ export default function Binomial() {
     const entrada: BinomialIn = {
       n: valorN,
       k: valorK,
-      criterios: { umbral: valorUmbral, vector, privilegios },
+      umbral: valorUmbral,
     }
     if (p.trim() !== '') {
       const valorP = Number(p)

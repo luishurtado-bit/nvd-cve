@@ -133,3 +133,31 @@ def test_tabla_acumulada() -> None:
     assert al_menos == pytest.approx(0.3231, abs=1e-4)
     assert tabla[0][3] == pytest.approx(1)  # P(X ≥ 0) = 1
     assert tabla[-1][2] == pytest.approx(1)  # P(X ≤ n) = 1
+
+# --- B26: límite del 5 % y supuestos ---
+
+from stats.binomial import n_max_recomendado, supuestos
+
+@pytest.mark.parametrize(
+    ("N", "esperado"), [(0, 0), (1, 0), (20, 0), (21, 1), (1000, 49), (3559, 177), (60, 2)]
+)
+def test_n_max_recomendado(N: int, esperado: int) -> None:
+    assert n_max_recomendado(N) == esperado
+    # Es el mayor n con n < 0,05·N: con enteros, sin errores de redondeo
+    assert esperado == 0 or 20 * esperado < N <= 20 * (esperado + 1)
+
+@pytest.mark.parametrize("N", [20, 21, 60, 61, 1000, 1001, 3559])
+def test_el_aviso_y_el_limite_coinciden(N: int) -> None:
+    limite = n_max_recomendado(N)
+    assert "n_grande_frente_a_N" not in _codigos(limite, 0, 0.1, N) or limite == 0
+    assert "n_grande_frente_a_N" in _codigos(limite + 1, 0, 0.1, N)
+
+def test_supuestos_con_el_ejemplo_del_informe() -> None:
+    s = supuestos(20, 0.1, 1000, 100, 9.0)
+    assert [(x.codigo, x.estado) for x in s] == [
+        ("n_fijo", "cumple"), ("dos_resultados", "cumple"), ("p_constante", "cumple"), ("independencia", "cumple")
+    ]
+
+def test_supuestos_con_lote_demasiado_grande() -> None:
+    s = {x.codigo: x for x in supuestos(50, 0.1, 1000, 100, 9.0)}
+    assert s["independencia"].estado == "advertencia" and "49" in s["independencia"].texto

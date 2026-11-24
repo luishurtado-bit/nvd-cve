@@ -12,8 +12,8 @@ Resumen de **lo mío** del [plan de trabajo v2](plan-de-trabajo-v2.md), sección
 |---|---|---|---|---|
 | 1 | Datos y depuración | B16, B17, B18 | B19 | [x] hecha (`6fc6746`) |
 | 2 | Calidad, bases y kpis | B19, B20, B24 | FB7, FG1, FB6 (Gaby) | [x] hecha (`f6708cf`) |
-| 3 | Descriptivo | B21, B22, B23 | FB6, FB8 (Gaby) | [x] hecha, pendiente de commit |
-| 4 | Estadística clara | B26, B27 | FA7, FA5 (Luis) | [ ] |
+| 3 | Descriptivo | B21, B22, B23 | FB6, FB8 (Gaby) | [x] hecha (`928476f`) |
+| 4 | Estadística clara | B26, B27 | FA7, FA5 (Luis) | [x] hecha, pendiente de commit |
 | 5 | Demo y cierre | B13, B11, B12, B28 | FC1 a FC4 | [ ] |
 
 ## Ya existía antes del plan v2
@@ -42,6 +42,11 @@ Resumen de **lo mío** del [plan de trabajo v2](plan-de-trabajo-v2.md), sección
 - **Registro:** quedan registradas las exportaciones (`exportar_cve`, `exportar_crudo`, `exportar_calidad`); `GET /datos/calidad` y `/dashboard/kpis` son consultas de pantalla y no se registran.
 - **Filtros:** `severidad`, `vector` y `privilegios` aceptan varios valores (parámetro repetido); fechas incluidas en los dos extremos; `hasta < desde` → 422. Se leen con un `Depends` (`leer_filtros`) y se aplican con `fuente.filtrar`, igual en todas las rutas.
 - **Agrupaciones:** las filas sin dato no entran en los grupos; `critico-por` informa cuántas son (`sin_dato`). `cruce` admite otras variables además de severidad × vector. La serie conserva el nombre `serie-diaria` para no romper al frontend, aunque ya agrupa por semana o mes.
+- **Binomial:** `BinomialIn` rechaza campos de más (`extra="forbid"`): con el contrato anterior (`criterios`) ahora responde 422. Se prefirió eso a ignorarlo, porque ignorarlo habría descartado en silencio el umbral que escribe el usuario.
+- **`n_max_recomendado`:** el mayor n con n < 0,05·N, calculado con enteros (`(N − 1) // 20`). El plan v2 decía ⌊0,05·N⌋, que con N = 1000 daba 50 aunque n = 50 ya dispara el aviso; así el aviso, el límite y el supuesto de independencia siempre coinciden. El aviso `n_grande_frente_a_N` también pasó a enteros.
+- **Supuestos:** `n_fijo` y `dos_resultados` siempre cumplen (son por construcción). `p_constante` avisa si p sale de menos de 30 CVE; con p a mano cumple y lo dice en el texto. `independencia` avisa si n > `n_max_recomendado`. Las `advertencias` de antes siguen igual.
+- **Reglas:** la `razon` es `null` si P(X)·P(Y) = 0. La `nota` de B y C dejó de ser `null`: dice que son dos métricas distintas del CVSS y que su relación es lo observado, para no sugerir una dependencia de fórmula que no existe.
+- **Frontend:** al regenerar los tipos, `Binomial.tsx` dejó de compilar (usaba `criterios`). Cambié una línea de esa página (`umbral: valorUmbral`) para mantener `tsc -b` en verde; sus campos de vector y privilegios siguen ahí, sin efecto, hasta que Luis haga FA7.
 - **KPIs:** proporciones entre 0 y 1 (`proporcion_*`), con su conteo al lado; salen de `contar_eventos`, así que coinciden con A, B y C de `/api/eventos`.
 
 ## Iteración 1: datos y depuración (B16 + B17 + B18)
@@ -102,17 +107,19 @@ Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 321 prue
 
 ## Iteración 4: estadística clara (B26 + B27)
 
-- [ ] **B26** Binomial más clara. ⚠ Rompe la API: commit `feat(api)!:` y avisar a Luis antes de unir.
-  - [ ] `BinomialIn` y `BinomialQuery` solo con `umbral`.
-  - [ ] `n_max_recomendado` y `supuestos` (n fijo, dos resultados, p constante, independencia).
-- [ ] **B27** Reglas más explicables.
-  - [ ] `diferencia` y `razon`.
-  - [ ] Tabla 2×2 con los 4 conteos (suman N).
-  - [ ] `nota` según los eventos elegidos.
-- [ ] Regenerar tipos.
-- [ ] `pytest` en verde.
+- [x] **B26** Binomial más clara. ⚠ Rompe la API: commit `feat(api)!:` y avisar a Luis antes de unir.
+  - [x] `BinomialIn` y `BinomialQuery` solo con `umbral` (`criterios` ya no existe; un campo de más → 422).
+  - [x] `umbral`, `n_max_recomendado` y `supuestos` en la salida (n fijo, dos resultados, p constante, independencia).
+  - [x] El límite del 5 % con enteros: el aviso, `n_max_recomendado` y el supuesto coinciden.
+  - [x] Exportar binomial con `umbral`.
+- [x] **B27** Reglas más explicables.
+  - [x] `diferencia` y `razon` (`null` si un evento es imposible).
+  - [x] `N` y tabla 2×2 con los 4 conteos (suman N); aplanada en el CSV de `/exportar/reglas`.
+  - [x] `nota` según los eventos elegidos (también para B y C).
+- [x] Tipos regenerados; `Binomial.tsx` ajustado en una línea para que `tsc -b` pase. Falta avisar a Luis **antes de unir**.
+- [x] `pytest` en verde.
 
-Hecho: —
+Hecho: 2026-11-23 · sin commit todavía (pendiente de tu revisión) · 365 pruebas pasan
 
 ## Iteración 5: demo y cierre (B13 + B11 + B12 + B28)
 
@@ -142,4 +149,5 @@ Hecho: —
 | 2026-11-23 | Línea base | 20dc49a | 229 pasan |
 | 2026-11-23 | 1 · Datos y depuración | 6fc6746 | 268 pasan |
 | 2026-11-23 | 2 · Calidad, bases y kpis | f6708cf | 292 pasan |
-| 2026-11-23 | 3 · Descriptivo | (sin commit) | 321 pasan |
+| 2026-11-23 | 3 · Descriptivo | 928476f | 321 pasan |
+| 2026-11-23 | 4 · Estadística clara | (sin commit) | 365 pasan |

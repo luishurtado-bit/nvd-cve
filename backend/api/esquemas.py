@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from typing import Any, Literal
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # Valores de la NVD (CVSS v3.x y v4.0)
 VectorAtaque = Literal["NETWORK", "ADJACENT_NETWORK", "ADJACENT", "LOCAL", "PHYSICAL"]
@@ -100,9 +100,19 @@ class ReglasIn(BaseModel):
             raise ValueError("x e y deben ser eventos distintos")
         return self
 
+class TablaContingencia(BaseModel):
+    """Los N CVE repartidos según si cumplen X y si cumplen Y: las cuatro celdas suman N."""
+
+    x_y: int = Field(ge=0, description="X ∩ Y")
+    x_no_y: int = Field(ge=0, description="X ∩ Yᶜ")
+    no_x_y: int = Field(ge=0, description="Xᶜ ∩ Y")
+    no_x_no_y: int = Field(ge=0, description="Xᶜ ∩ Yᶜ")
+
 class ReglasOut(BaseModel):
     x: Evento
     y: Evento
+    N: int = Field(description="Tamaño de Ω")
+    tabla: TablaContingencia
     p_x: float
     p_y: float
     p_x_complemento: float = Field(description="P(Xᶜ) = 1 − P(X)")
@@ -110,7 +120,12 @@ class ReglasOut(BaseModel):
     p_interseccion: float = Field(description="P(X ∩ Y)")
     p_union: float = Field(description="P(X ∪ Y) = P(X) + P(Y) − P(X ∩ Y)")
     producto: float = Field(description="P(X)·P(Y), para comparar con P(X ∩ Y)")
-    independientes: bool
+    diferencia: float = Field(description="P(X ∩ Y) − P(X)·P(Y): 0 si fueran independientes")
+    razon: float | None = Field(
+        description="P(X ∩ Y) / (P(X)·P(Y)): > 1 ocurren juntos más de lo esperado si fueran "
+        "independientes, < 1 menos; null si P(X)·P(Y) = 0"
+    )
+    independientes: bool = Field(description="Veredicto exacto (tolerancia 1e-9); mejor ver `razon`")
     nota: str | None = None
 
 # --- Bayes ---
@@ -135,6 +150,10 @@ class BayesOut(BaseModel):
 # --- Binomial ---
 
 class BinomialIn(BaseModel):
+    # Un campo de más (por ejemplo el antiguo `criterios`) es un error, no se ignora:
+    # si se ignorara, un umbral editado se perdería en silencio
+    model_config = ConfigDict(extra="forbid")
+
     n: int = Field(gt=0, le=N_MAXIMO_BINOMIAL, description="Tamaño del lote")
     k: int = Field(ge=0, description="Número de CVE críticos")
     p: float | None = Field(
@@ -143,7 +162,9 @@ class BinomialIn(BaseModel):
     confianza: float | None = Field(
         None, gt=0, lt=1, description="Para el n mínimo con P(X ≥ 1) ≥ confianza"
     )
-    criterios: CriteriosIn = CriteriosIn()
+    umbral: float = Field(
+        9.0, ge=0, le=10, description="Crítico (evento A): baseScore ≥ umbral. Solo cambia p = K/N"
+    )
 
 class PuntoPmf(BaseModel):
     k: int
@@ -153,11 +174,17 @@ class Advertencia(BaseModel):
     codigo: str
     mensaje: str
 
+class Supuesto(BaseModel):
+    codigo: Literal["n_fijo", "dos_resultados", "p_constante", "independencia"]
+    estado: Literal["cumple", "advertencia"]
+    texto: str = Field(description="Frase lista para mostrar, con los números de esta consulta")
+
 class BinomialOut(BaseModel):
     n: int
     k: int
     p: float
     p_estimada: bool = Field(description="True si p se estimó como K/N")
+    umbral: float = Field(description="Crítico: baseScore ≥ umbral")
     N: int = Field(description="Tamaño de Ω")
     K: int = Field(description="Críticos en Ω (evento A)")
     pmf: list[PuntoPmf]
@@ -169,6 +196,8 @@ class BinomialOut(BaseModel):
     desviacion: float
     confianza: float | None
     n_minimo: int | None = Field(description="Menor n con P(X ≥ 1) ≥ confianza")
+    n_max_recomendado: int = Field(description="Mayor lote con n < 0,05·N (la binomial sigue siendo buena)")
+    supuestos: list[Supuesto] = Field(description="Los 4 supuestos de la binomial y si se cumplen")
     advertencias: list[Advertencia]
 
 # --- Dashboard ---
@@ -249,7 +278,8 @@ class BayesQuery(CriteriosIn):
     condicionante: Condicionante = "B"
     prior: float | None = Field(None, ge=0, le=1)
 
-class BinomialQuery(CriteriosIn):
+class BinomialQuery(BaseModel):
+    umbral: float = Field(9.0, ge=0, le=10)
     n: int = Field(gt=0, le=N_MAXIMO_BINOMIAL)
     k: int = Field(0, ge=0)
     p: float | None = Field(None, ge=0, le=1)

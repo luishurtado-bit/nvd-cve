@@ -100,7 +100,10 @@ def exportar_eventos(q: Annotated[CriteriosIn, Query()]) -> Response:
 def exportar_reglas(q: Annotated[ReglasQuery, Query()]) -> Response:
     """Complemento, unión, intersección e independencia de X e Y."""
     r = reglas(ReglasIn(criterios=_criterios(q), x=q.x, y=q.y))
-    return _csv(_medidas(r.model_dump()), f"reglas_{q.x}_{q.y}")
+    datos = r.model_dump()
+    # La tabla 2×2 va como cuatro medidas más, para que el CSV siga siendo plano
+    datos.update({f"tabla_{celda}": n for celda, n in datos.pop("tabla").items()})
+    return _csv(_medidas(datos), f"reglas_{q.x}_{q.y}")
 
 @router.get("/bayes", response_class=Response, responses=_RESPUESTA_CSV)
 def exportar_bayes(q: Annotated[BayesQuery, Query()]) -> Response:
@@ -111,6 +114,6 @@ def exportar_bayes(q: Annotated[BayesQuery, Query()]) -> Response:
 @router.get("/binomial", response_class=Response, responses=_RESPUESTA_CSV)
 def exportar_binomial(q: Annotated[BinomialQuery, Query()]) -> Response:
     """Tabla de X ~ Bin(n, p): P(X = k), P(X ≤ k) y P(X ≥ k) para k = 0…n."""
-    r = binomial(BinomialIn(n=q.n, k=q.k, p=q.p, criterios=_criterios(q)))
+    r = binomial(BinomialIn(n=q.n, k=q.k, p=q.p, umbral=q.umbral))
     df = pd.DataFrame(tabla_acumulada(r.n, r.p), columns=["k", "P(X=k)", "P(X<=k)", "P(X>=k)"])
     return _csv(df, f"binomial_n{r.n}")

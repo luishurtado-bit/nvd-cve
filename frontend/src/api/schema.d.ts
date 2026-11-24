@@ -735,13 +735,11 @@ export interface components {
              */
             confianza?: number | null;
             /**
-             * @default {
-             *       "umbral": 9,
-             *       "vector": "NETWORK",
-             *       "privilegios": "NONE"
-             *     }
+             * Umbral
+             * @description Crítico (evento A): baseScore ≥ umbral. Solo cambia p = K/N
+             * @default 9
              */
-            criterios: components["schemas"]["CriteriosIn"];
+            umbral: number;
         };
         /** BinomialOut */
         BinomialOut: {
@@ -756,6 +754,11 @@ export interface components {
              * @description True si p se estimó como K/N
              */
             p_estimada: boolean;
+            /**
+             * Umbral
+             * @description Crítico: baseScore ≥ umbral
+             */
+            umbral: number;
             /**
              * N
              * @description Tamaño de Ω
@@ -802,6 +805,16 @@ export interface components {
              * @description Menor n con P(X ≥ 1) ≥ confianza
              */
             n_minimo: number | null;
+            /**
+             * N Max Recomendado
+             * @description Mayor lote con n < 0,05·N (la binomial sigue siendo buena)
+             */
+            n_max_recomendado: number;
+            /**
+             * Supuestos
+             * @description Los 4 supuestos de la binomial y si se cumplen
+             */
+            supuestos: components["schemas"]["Supuesto"][];
             /** Advertencias */
             advertencias: components["schemas"]["Advertencia"][];
         };
@@ -1297,6 +1310,12 @@ export interface components {
              * @enum {string}
              */
             y: "A" | "B" | "C";
+            /**
+             * N
+             * @description Tamaño de Ω
+             */
+            N: number;
+            tabla: components["schemas"]["TablaContingencia"];
             /** P X */
             p_x: number;
             /** P Y */
@@ -1326,7 +1345,20 @@ export interface components {
              * @description P(X)·P(Y), para comparar con P(X ∩ Y)
              */
             producto: number;
-            /** Independientes */
+            /**
+             * Diferencia
+             * @description P(X ∩ Y) − P(X)·P(Y): 0 si fueran independientes
+             */
+            diferencia: number;
+            /**
+             * Razon
+             * @description P(X ∩ Y) / (P(X)·P(Y)): > 1 ocurren juntos más de lo esperado si fueran independientes, < 1 menos; null si P(X)·P(Y) = 0
+             */
+            razon: number | null;
+            /**
+             * Independientes
+             * @description Veredicto exacto (tolerancia 1e-9); mejor ver `razon`
+             */
             independientes: boolean;
             /** Nota */
             nota?: string | null;
@@ -1436,6 +1468,50 @@ export interface components {
              * @description Un punto por periodo, incluidos los periodos sin CVE
              */
             puntos: components["schemas"]["PuntoSerie"][];
+        };
+        /** Supuesto */
+        Supuesto: {
+            /**
+             * Codigo
+             * @enum {string}
+             */
+            codigo: "n_fijo" | "dos_resultados" | "p_constante" | "independencia";
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "cumple" | "advertencia";
+            /**
+             * Texto
+             * @description Frase lista para mostrar, con los números de esta consulta
+             */
+            texto: string;
+        };
+        /**
+         * TablaContingencia
+         * @description Los N CVE repartidos según si cumplen X y si cumplen Y: las cuatro celdas suman N.
+         */
+        TablaContingencia: {
+            /**
+             * X Y
+             * @description X ∩ Y
+             */
+            x_y: number;
+            /**
+             * X No Y
+             * @description X ∩ Yᶜ
+             */
+            x_no_y: number;
+            /**
+             * No X Y
+             * @description Xᶜ ∩ Y
+             */
+            no_x_y: number;
+            /**
+             * No X No Y
+             * @description Xᶜ ∩ Yᶜ
+             */
+            no_x_no_y: number;
         };
         /** TablaEventos */
         TablaEventos: {
@@ -2454,12 +2530,7 @@ export interface operations {
     exportar_binomial_api_exportar_binomial_get: {
         parameters: {
             query: {
-                /** @description A: baseScore ≥ umbral */
                 umbral?: number;
-                /** @description B: vector de ataque */
-                vector?: "NETWORK" | "ADJACENT_NETWORK" | "ADJACENT" | "LOCAL" | "PHYSICAL";
-                /** @description C: privilegios requeridos */
-                privilegios?: "NONE" | "LOW" | "HIGH";
                 n: number;
                 k?: number;
                 p?: number | null;

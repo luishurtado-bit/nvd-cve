@@ -134,6 +134,10 @@ def test_exportar_reglas() -> None:
     valores = dict(zip(df["medida"], df["valor"]))
     assert float(valores["p_union"]) == pytest.approx(0.76)
     assert valores["independientes"] == "False"
+    assert float(valores["razon"]) == pytest.approx(1.2)
+    # La tabla 2×2 va aplanada, no como un diccionario dentro de una celda
+    assert [valores[f"tabla_{c}"] for c in ("x_y", "x_no_y", "no_x_y", "no_x_no_y")] == ["90", "10", "660", "240"]
+    assert "tabla" not in valores
 
 def test_exportar_bayes_con_prior() -> None:
     df = _leer_csv(client.get("/api/exportar/bayes", params={"prior": 0.2}))
@@ -147,6 +151,9 @@ def test_exportar_binomial() -> None:
     assert df.columns.tolist() == ["k", "P(X=k)", "P(X<=k)", "P(X>=k)"]
     assert len(df) == 21
     assert df.loc[3, "P(X>=k)"] == pytest.approx(0.3231, abs=1e-4)
+    # El umbral cambia p = K/N cuando no se da p
+    df = _leer_csv(client.get("/api/exportar/binomial", params={"n": 20, "umbral": 7}))
+    assert df.loc[1, "P(X=k)"] == pytest.approx(20 * 0.76 * 0.24**19, rel=1e-6)
 
 @pytest.mark.parametrize(
     "ruta",

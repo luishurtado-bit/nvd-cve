@@ -1,4 +1,5 @@
 import math
+from dataclasses import dataclass
 
 
 def _validar_prob(valor: float, nombre: str) -> None:
@@ -51,6 +52,43 @@ def son_independientes(
     for valor, nombre in ((p_a, "P(A)"), (p_b, "P(B)"), (p_ab, "P(A ∩ B)")):
         _validar_prob(valor, nombre)
     return math.isclose(p_ab, p_a * p_b, abs_tol=tolerancia)
+
+
+def diferencia_independencia(p_a: float, p_b: float, p_ab: float) -> float:
+    """P(A ∩ B) − P(A)·P(B): 0 si A y B fueran independientes."""
+    for valor, nombre in ((p_a, "P(A)"), (p_b, "P(B)"), (p_ab, "P(A ∩ B)")):
+        _validar_prob(valor, nombre)
+    return p_ab - p_a * p_b
+
+
+def razon_independencia(p_a: float, p_b: float, p_ab: float) -> float | None:
+    """P(A ∩ B) / (P(A)·P(B)): cuántas veces ocurren juntos frente a lo esperado si fueran
+    independientes (1 = igual). None si P(A)·P(B) = 0, donde la razón no existe."""
+    for valor, nombre in ((p_a, "P(A)"), (p_b, "P(B)"), (p_ab, "P(A ∩ B)")):
+        _validar_prob(valor, nombre)
+    producto = p_a * p_b
+    return p_ab / producto if producto > 0 else None
+
+
+@dataclass(frozen=True)
+class Contingencia:
+    """Reparto de los N resultados según cumplan X y Y (las cuatro celdas suman N)."""
+
+    x_y: int
+    x_no_y: int
+    no_x_y: int
+    no_x_no_y: int
+
+
+def contingencia(N: int, n_x: int, n_y: int, n_xy: int) -> Contingencia:
+    """Tabla 2×2 a partir de n(X), n(Y) y n(X ∩ Y)."""
+    if not 0 <= n_xy <= min(n_x, n_y) or max(n_x, n_y) > N or n_x + n_y - n_xy > N:
+        raise ValueError(
+            f"conteos incoherentes: N = {N}, n(X) = {n_x}, n(Y) = {n_y}, n(X ∩ Y) = {n_xy}"
+        )
+    return Contingencia(
+        x_y=n_xy, x_no_y=n_x - n_xy, no_x_y=n_y - n_xy, no_x_no_y=N - n_x - n_y + n_xy
+    )
 
 
 def probabilidad_total(p_b_dado_a: float, p_b_dado_ac: float, p_a: float) -> float:

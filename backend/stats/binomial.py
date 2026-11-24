@@ -1,12 +1,19 @@
 import math
 from dataclasses import dataclass, field
+from typing import Literal
 
 from scipy.stats import binom
 
-# Regla práctica del informe: sin reemplazo ≈ independiente si n < 0,05·N
-FRACCION_MAXIMA_DE_N = 0.05
+# Regla práctica del informe: sin reemplazo ≈ independiente si n < 0,05·N, es decir,
+# 20·n < N. Se compara con enteros para que no haya errores de redondeo en el límite
+INVERSO_FRACCION_MAXIMA = 20
 # Por debajo de este N la estimación p = K/N es poco fiable
 N_PEQUENO = 30
+
+
+def n_max_recomendado(N: int) -> int:
+    """El lote más grande que cumple n < 0,05·N (0 si ni uno solo cabe)."""
+    return max(0, (N - 1) // INVERSO_FRACCION_MAXIMA)
 
 
 def _validar(n: int, p: float) -> None:
@@ -109,15 +116,65 @@ def advertencias(n: int, k: int, p: float, N: int | None = None) -> list[Adverte
                     f"N = {N} es menor que {N_PEQUENO}: la estimación de p es poco fiable",
                 )
             )
-        if n >= FRACCION_MAXIMA_DE_N * N:
+        if n > n_max_recomendado(N):
             avisos.append(
                 Advertencia(
                     "n_grande_frente_a_N",
-                    f"n = {n} ≥ 0,05·N = {FRACCION_MAXIMA_DE_N * N:g}: "
+                    f"n = {n} ≥ 0,05·N = {N / INVERSO_FRACCION_MAXIMA:g}: "
                     "el supuesto de independencia se debilita",
                 )
             )
     return avisos
+
+
+@dataclass(frozen=True)
+class Supuesto:
+    codigo: str
+    estado: Literal["cumple", "advertencia"]
+    texto: str
+
+
+def _porcentaje(valor: float) -> str:
+    return f"{valor * 100:.1f}".replace(".", ",") + " %"
+
+
+def supuestos(
+    n: int, p: float, N: int, K: int, umbral: float, p_estimada: bool = True
+) -> list[Supuesto]:
+    """Los cuatro supuestos de la binomial y si se cumplen con estos datos.
+
+    Los dos primeros se cumplen por construcción; los otros dependen de N y de n.
+    """
+    limite = n_max_recomendado(N)
+    if not p_estimada:
+        p_texto = f"p = {_porcentaje(p)}, escrita a mano, es la misma para todos los CVE del lote"
+        p_estado: Literal["cumple", "advertencia"] = "cumple"
+    elif N < N_PEQUENO:
+        p_texto = f"p = {_porcentaje(p)} ({K} de {N}) sale de muy pocos CVE: es poco fiable"
+        p_estado = "advertencia"
+    else:
+        p_texto = f"p = {_porcentaje(p)} ({K} de {N}) es la misma para todos los CVE del lote"
+        p_estado = "cumple"
+    if n <= limite:
+        independencia = Supuesto(
+            "independencia",
+            "cumple",
+            f"n = {n} no pasa de {limite}, el 5 % de N = {N}: sacar sin reemplazo "
+            "casi no cambia p de un CVE al siguiente",
+        )
+    else:
+        independencia = Supuesto(
+            "independencia",
+            "advertencia",
+            f"n = {n} pasa de {limite}, el 5 % de N = {N}: al sacar sin reemplazo "
+            "p cambia de un CVE al siguiente y la binomial se aleja de lo real",
+        )
+    return [
+        Supuesto("n_fijo", "cumple", f"El lote tiene un tamaño fijo: n = {n} CVE"),
+        Supuesto("dos_resultados", "cumple", f"Cada CVE es crítico (baseScore ≥ {umbral:g}) o no lo es".replace(".", ",")),
+        Supuesto("p_constante", p_estado, p_texto),
+        independencia,
+    ]
 
 
 @dataclass(frozen=True)
