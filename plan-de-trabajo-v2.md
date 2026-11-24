@@ -234,7 +234,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 **[x] B13 (S) Conjunto para la demo y pruebas del flujo completo.**
 - **Qué:**
   - El equipo elige el periodo de 120 días. Se descarga una vez y se copia a `data/demo/` (con una excepción en `.gitignore`), para no depender de la API en la sustentación. El backend lo carga al arrancar si no hay una descarga propia en `data/`. Van el CSV de 20 columnas **sin depurar** y sus metadatos; la base original (`.crudo.json.gz`) no se sube a Git. El procedimiento está en el README, sección «Datos de la demo».
-  - **Estado:** `data/demo/` tiene hoy un **mes** (23 oct al 22 nov, N = 15 922) para probar. Falta reemplazarlo por el periodo de 120 días cuando el equipo lo decida.
+  - **Estado:** `data/demo/` tiene el periodo definitivo de **120 días** (26 jul al 22 nov de 2026, consultado el 24 nov): 60 145 descargados, 1458 rechazados, 0 duplicados, 3288 sin puntuación, **N = 55 399** y **6217 críticos (11,2 %)**.
   - Pruebas del flujo con datos sintéticos: un caso por paso de limpieza más la conciliación. No dependen del periodo.
   - Comprobación cruzada con el notebook, hecha con datos reales del 12 al 18 de nov: descargados (3645), rechazados (22) y duplicados (0) **coinciden exactamente**. Los sin puntuación bajaron de 64 a 20 porque la NVD puntuó 44 CVE más entre la consulta del notebook (19 nov) y la nuestra (24 nov), de ahí N = 3603 y 318 críticos en vez de 3559 y 311. Valida la lógica; no fija el periodo.
 - **Necesita:** B20.
