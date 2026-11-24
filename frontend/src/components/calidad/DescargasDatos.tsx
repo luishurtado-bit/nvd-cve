@@ -25,7 +25,7 @@ export default function DescargasDatos() {
         {BASES.map((b) => (
           <div key={b.recurso} className="grid content-between gap-3 rounded-lg border p-4">
             <div>
-              <h3 className="m-0 text-sm font-semibold">{b.titulo}</h3>
+              <h2 className="m-0 text-sm font-semibold">{b.titulo}</h2>
               <p className="mt-1 mb-0 text-sm text-muted-foreground">{b.texto}</p>
             </div>
             <a href={urlExportar(b.recurso)} download className={buttonVariants({ variant: 'outline', size: 'sm' })}>

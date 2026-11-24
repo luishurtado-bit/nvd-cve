@@ -102,7 +102,7 @@ export default function Layout() {
               variant={backend === 'sin conexión' ? 'destructive' : 'secondary'}
               className={cn(
                 backend === 'ok' &&
-                  'bg-green-600/15 text-green-700 dark:bg-green-500/20 dark:text-green-400',
+                  'bg-green-600/15 text-green-800 dark:bg-green-500/20 dark:text-green-400',
               )}
             >
               {backend}

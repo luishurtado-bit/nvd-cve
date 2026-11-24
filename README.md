@@ -10,6 +10,7 @@ A partir de los datos de la National Vulnerability Database (NVD) del NIST, el s
 | [plan-de-trabajo-software.md](plan-de-trabajo-software.md) | Plan anterior (fases 1 a 3), como historial |
 | [docs/contrato-api.md](docs/contrato-api.md) | Qué hace cada ruta de la API y qué parámetros acepta |
 | [docs/diccionario-de-datos.md](docs/diccionario-de-datos.md) | Las 20 variables, los pasos de la limpieza y los archivos de `data/` |
+| [docs/pendientes-front-a.md](docs/pendientes-front-a.md) | Lo que falta de las páginas de estadística y las piezas del frontend que se pueden reutilizar |
 | `nvd-electiva-3.ipynb` | Notebook de la descarga y la limpieza (evidencia reproducible para Electiva III) |
 
 ## Estructura
@@ -22,7 +23,7 @@ nvd-cve/
 │   ├── nvd/           descarga de la NVD: cliente, extracción, depuración y almacenamiento
 │   ├── tests/         pruebas con pytest
 │   └── requirements.txt
-├── frontend/          React + TypeScript + Vite
+├── frontend/          React + TypeScript + Vite (ver frontend/README.md)
 │   └── src/api/schema.d.ts   tipos generados desde la API (no se editan a mano)
 ├── data/              CVE descargados (no se suben al repositorio)
 │   └── demo/          conjunto de la demo: el CSV y sus metadatos sí se suben
@@ -30,6 +31,17 @@ nvd-cve/
 ├── Dockerfile         imagen única: API + frontend compilado
 └── .env.example       plantilla de variables de entorno
 ```
+
+## Páginas de la aplicación
+
+| Ruta | Qué responde | Estado |
+|---|---|---|
+| `/` | **Inicio**: el dashboard único. El problema, 5 indicadores, gráficos con la pregunta que responde cada uno, 3 hallazgos calculados y las limitaciones | Terminada |
+| `/datos` | **Datos y calidad**. Pestaña «Cargar datos»: descarga de la NVD con progreso real o subida de un CSV. Pestaña «Calidad de los datos» (`?pestana=calidad`): embudo de limpieza, nulos, atípicos, diccionario y descarga de las bases | Terminada |
+| `/descriptivo` | **Análisis descriptivo** con filtros globales (fechas, severidad, vector, privilegios) que viajan al backend | Terminada |
+| `/eventos`, `/reglas`, `/bayes`, `/binomial` | Eventos, reglas de probabilidad, Bayes y el modelo binomial | Funcionan, pero sin el rediseño del plan v2: ver [docs/pendientes-front-a.md](docs/pendientes-front-a.md) |
+
+Todas las páginas muestran arriba de dónde vienen los datos (origen, periodo, N y fecha de consulta) y, con datos simulados, un aviso amarillo.
 
 ## Requisitos
 
@@ -215,8 +227,10 @@ docker run --rm -p 8000:8000 --env-file .env -v nvd-datos:/app/data nvd-cve
 |---|---|---|
 | Pruebas del backend (no usan la red; incluyen una por endpoint y la revisión de la documentación) | `backend/` | `python -m pytest -q` |
 | Revisión de tipos del frontend | `frontend/` | `npx tsc -b` |
-| Lint del frontend | `frontend/` | `npm run lint` |
+| Lint del frontend (hay 4 avisos anteriores, ninguno en el código nuevo) | `frontend/` | `npm run lint` |
 | Compilar el frontend | `frontend/` | `npm run build` |
+
+El frontend no tiene framework de pruebas: se revisa con `tsc`, el lint, la compilación y mirando las páginas en el navegador (claro y oscuro, con datos simulados y con la demo).
 
 ## Regenerar los tipos de la API en el frontend
 

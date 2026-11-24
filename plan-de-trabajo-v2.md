@@ -14,10 +14,34 @@ Este plan cubre lo que falta del proyecto para cumplir dos materias:
 | Rol | Persona | Rama | Secciones que le tocan |
 |---|---|---|---|
 | **Backend**: API, limpieza y cálculos | Edwin | `snydev` | 1, 2, 3, **4**, 6, 7, 8 |
-| **Front A**: páginas de estadística (eventos, Bayes, binomial) | Luis | `luis` | 1, 2, **3**, **5.1**, **5.3**, 6, 7 |
-| **Front B**: datos, calidad y dashboard | Gaby | `gaby-front-b` | 1, 2, 3, **5.1**, **5.2**, 6, 7 |
+| **Front B**: datos, calidad y dashboard | Edwin (reasignado el 2026-11-24; era de Gaby) | `snydev` | 1, 2, 3, **5.1**, **5.2**, 6, 7 |
+| **Front A**: páginas de estadística (eventos, Bayes, binomial) | Luis | `luis` | 1, 2, **3**, **5.3**, 6, 7 y `docs/pendientes-front-a.md` |
 
 Las secciones 1 a 3 son para todos. Explican qué construimos y el vocabulario común, que es lo que más se presta a confusión.
+
+### Estado al 2026-11-24
+
+El backend está terminado (ver `docs/contrato-api.md`). En el frontend, **Edwin hizo todo el Front B y la base común** en `snydev`; el Front A queda para Luis, con la lista de pendientes en [docs/pendientes-front-a.md](docs/pendientes-front-a.md).
+
+| Tarea | Estado | Dónde quedó |
+|---|---|---|
+| FG4 unir carpetas y componentes | Hecha | Una sola carpeta: **`src/components/`** (no `componentes/`, que era como decía FG4), por la convención de shadcn |
+| FG3 formato y explicaciones | Hecha | `lib/{formato,dominio,glosario}.ts`, `comunes/{VerCalculo,Ayuda}` |
+| FG1 barra de contexto, FG2 pie | Hechas | `layout/{BarraContexto,PieFuente}.tsx` |
+| FG5 gráfico pmf en modo oscuro | **Pendiente (Luis)** | `GraficoPmf.tsx` no se tocó |
+| FB9 descarga con progreso | Hecha | `hooks/use-descarga.ts`, `components/datos/` |
+| FB7 calidad de datos | Hecha | `components/calidad/`, pestaña «Calidad de los datos» en `/datos` |
+| FB6 inicio (dashboard único) | Hecha | `paginas/Inicio.tsx`, `lib/hallazgos.ts` |
+| FB8 descriptivo con filtros globales | Hecha | `paginas/Descriptivo.tsx`, `components/descriptivo/`, `contexto/FiltrosProvider.tsx` |
+| FA5, FA6, FA7, FA8 | **Pendientes (Luis)** | Ver `docs/pendientes-front-a.md` |
+| FC1, FC2 del Front B | Hechas (revisión manual y automática, sin framework de pruebas) | Ver abajo |
+| FC3 capturas, FC4 guion | Pendientes | Se hacen con el periodo de 120 días ya cargado |
+
+Diferencias con lo que decía el plan:
+
+- **Sin framework de pruebas.** FC2 se cubrió con `tsc`, `oxlint`, `build` y revisión en un navegador real (contraste, nombres accesibles, encabezados, teclado, backend caído, N = 0).
+- El menú dice «Datos y calidad» (no «Datos») y el ítem «Inicio» es nuevo.
+- Los filtros del descriptivo viven en un contexto, no en la URL: sobreviven al cambiar de sección y se reinician al cargar otros datos.
 
 ### Códigos de las tareas
 
@@ -276,7 +300,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 ### 5.1 Base común
 
 
-**FG4 (M) Unir carpetas y componentes del dashboard. Front B. Va primero.**
+**FG4 (M) Unir carpetas y componentes del dashboard. Front B. Va primero.** ✅ Hecha
 - **Qué:**
   - Unir `src/componentes/` y `src/components/` en una sola carpeta, `src/componentes/`. Mueve archivos de los dos, así que se hace primero y se avisa antes de que el otro siga.
   - `TarjetaKpi` reemplaza a `Metrica` (en `CargaDatos.tsx`) y a `Estadistico` (en `DashboardDescriptivo.tsx`).
@@ -284,7 +308,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 - **Necesita:** nada.
 - **Listo cuando:** hay una sola carpeta de componentes y las páginas actuales funcionan igual.
 
-**FG3 (M) Formato y explicaciones. Front A.**
+**FG3 (M) Formato y explicaciones. Front A.** ✅ Hecha (por Edwin)
 - **Qué:**
   - `src/lib/formato.ts`: las probabilidades se muestran como **porcentaje con la fracción**, por ejemplo «8,7 % (311 de 3559)», con coma decimal (es-CO). Los 4 decimales solo aparecen dentro de «Ver cálculo».
   - `VerCalculo`: desplegable con la fórmula y los números ya sustituidos.
@@ -293,23 +317,23 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 - **Necesita:** FG4, por la carpeta.
 - **Listo cuando:** ninguna página muestra una probabilidad como `0.0874`.
 
-**FG1 (S) Barra de contexto de datos. Front B.**
+**FG1 (S) Barra de contexto de datos. Front B.** ✅ Hecha
 - **Qué:** en la barra superior (`Layout.tsx`): origen (simulado, NVD API o CSV), periodo, N y fecha de consulta. Con datos simulados, un **aviso amarillo** visible en todas las páginas.
 - **Necesita:** hoy sirve `GET /api/datos/resumen` (ya trae `origen`, periodo y N); la fecha de consulta llega con B19.
 
-**FG2 (S) Pie con la fuente. Front B.**
+**FG2 (S) Pie con la fuente. Front B.** ✅ Hecha
 - **Qué:** «Fuente: NVD – NIST, CVE API 2.0. Consultado el …», con enlace.
 
-**FG5 (S) Gráficos con los colores del tema. Front A.**
+**FG5 (S) Gráficos con los colores del tema. Front A.** ⏳ Pendiente (Luis)
 - **Qué:** `GraficoPmf.tsx` también en modo oscuro, con títulos de eje, unidades y leyenda.
 
 ### 5.2 Front B: datos y dashboard (Electiva III)
 
-**FB9 (S) Descarga con progreso real.**
+**FB9 (S) Descarga con progreso real.** ✅ Hecha
 - **Qué:** usar `POST /api/datos/descargas` y consultar `GET /api/datos/descargas/{id}` para mostrar el tramo y los CVE descargados. Las dos rutas **ya existen**. El selector de fechas sugiere 120 días y avisa si el rango los supera, porque la descarga se parte en tramos.
 - **Necesita:** nada.
 
-**FB7 (M) Página de calidad de datos** (`/datos`, junto con la carga).
+**FB7 (M) Página de calidad de datos** (`/datos`, junto con la carga). ✅ Hecha
 - **Qué:**
   - **Embudo** de la limpieza: un escalón por paso, con lo eliminado y la justificación. Ejemplo: 3645 → 3623 → 3559.
   - Nulos por columna, antes y después.
@@ -318,7 +342,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
   - Botones para descargar la base original, la base limpia y el reporte.
 - **Necesita:** B19. Mientras tanto se puede maquetar con el ejemplo de la sección 6.
 
-**FB6 (L) Inicio: el dashboard único de la guía** (`/`).
+**FB6 (L) Inicio: el dashboard único de la guía** (`/`). ✅ Hecha
 - **Qué:**
   - El problema y la pregunta principal (sección 1).
   - 5 indicadores de `/api/dashboard/kpis`.
@@ -328,7 +352,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 - **Necesita:** B23 y B24.
 - **Listo cuando:** la página sola sirve como captura del dashboard para el informe.
 
-**FB8 (L) Análisis descriptivo** (`/descriptivo`, sale de `DashboardDescriptivo.tsx`).
+**FB8 (L) Análisis descriptivo** (`/descriptivo`, sale de `DashboardDescriptivo.tsx`). ✅ Hecha
 - **Qué:**
   - **Filtros globales** (fechas dentro del periodo, severidad, vector y privilegios) que se envían al backend y cambian **todos** los indicadores y gráficos.
   - Selector de agrupación de la serie: día, semana o mes.
@@ -349,7 +373,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
 5. **Solo las entradas que cambian el resultado.** Si un campo no influye, no se muestra.
 6. Todas las cifras salen de los datos cargados. Los números de esta sección son ejemplos.
 
-**FA5 (M) Eventos y reglas** (une `Eventos.tsx` y `Reglas.tsx` en `/eventos`).
+**FA5 (M) Eventos y reglas** (une `Eventos.tsx` y `Reglas.tsx` en `/eventos`). ⏳ Pendiente (Luis)
 - **Qué:**
   - Encabezado del experimento: «Se elige al azar un CVE de los N publicados entre [inicio] y [fin]».
   - Tres tarjetas, A (crítico), B (por red) y C (sin privilegios), cada una con una frase, la fracción y el %.
@@ -358,7 +382,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
   - Independencia: dos barras, P(X∩Y) frente a P(X)·P(Y), con la `razon` («ocurren juntos 1,4 veces más de lo esperado si fueran independientes») y el aviso de que la relación viene del CVSS.
 - **Necesita:** FG3. La tabla 2×2 y la `razon` llegan con B27; antes se pueden calcular en el frontend con los datos de `/api/eventos`.
 
-**FA6 (M) Bayes** (`/bayes`).
+**FA6 (M) Bayes** (`/bayes`). ⏳ Pendiente (Luis)
 - **Qué:**
   - **Árbol de probabilidad**: A / no A → E / no E, con frecuencias («de cada 1000 CVE…»).
   - Barras del prior frente al posterior.
@@ -367,7 +391,7 @@ Se trabaja por **iteraciones pequeñas**: código, prueba con `pytest` y un comm
   - El paso a paso dentro de «Ver cálculo».
 - **Necesita:** FG3. **No necesita cambios en el backend.**
 
-**FA7 (L) Binomial: la página central** (`/binomial`). Tiene cuatro bloques, de arriba abajo:
+**FA7 (L) Binomial: la página central** (`/binomial`). ⏳ Pendiente (Luis). Tiene cuatro bloques, de arriba abajo:
 
 1. **El modelo.**
    - «X = número de CVE críticos en un lote de n CVE elegidos al azar».
@@ -388,7 +412,7 @@ Además:
 
 - **Necesita:** FG3 y FG5. Con la API actual (que ya trae `K`, `N` y `advertencias`) se pueden hacer los bloques 2, 3 y 4. El bloque 1 completo necesita B26.
 
-**FA8 (S) Exportar.**
+**FA8 (S) Exportar.** ⏳ Pendiente (Luis)
 - **Qué:** botones CSV en eventos, reglas, Bayes y binomial (`/api/exportar/*`, **ya existen**) y PNG de la pmf.
 
 ### 5.4 Cierre (los tres)
