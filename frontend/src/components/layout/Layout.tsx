@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { ChartColumn, Combine, Database, Moon, Percent, Scale, ShieldAlert, Sun } from 'lucide-react'
 import { api } from '@/api/cliente'
+import BarraContexto from '@/components/layout/BarraContexto'
+import PieFuente from '@/components/layout/PieFuente'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -155,9 +157,11 @@ export default function Layout() {
             </TooltipContent>
           </Tooltip>
         </header>
-        <div className="mx-auto w-full max-w-[90rem] p-6">
+        <BarraContexto />
+        <div className="mx-auto w-full max-w-[90rem] flex-1 p-6">
           <Outlet />
         </div>
+        <PieFuente />
       </SidebarInset>
       <Toaster position="top-right" />
     </SidebarProvider>

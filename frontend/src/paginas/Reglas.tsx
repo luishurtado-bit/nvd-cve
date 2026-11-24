@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { api, ErrorApi } from '@/api/cliente'
-import type { CriteriosIn, ReglasOut } from '@/api/tipos'
-import Cargando from '@/componentes/Cargando'
-import MensajeError from '@/componentes/MensajeError'
+import { api } from '@/api/cliente'
+import type { Privilegios, ReglasOut, Vector } from '@/api/tipos'
+import { leerUmbral, MENSAJE_UMBRAL, mensajeDe, PRIVILEGIOS, VECTORES } from '@/lib/dominio'
+import Cargando from '@/components/comunes/Cargando'
+import MensajeError from '@/components/comunes/MensajeError'
 import { Campo } from '@/components/campo'
 import { DosColumnas } from '@/components/dos-columnas'
 import { Formulario } from '@/components/formulario'
@@ -14,33 +15,12 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 type Evento = ReglasOut['x']
-type Vector = NonNullable<CriteriosIn['vector']>
-type Privilegios = NonNullable<CriteriosIn['privilegios']>
 
 const eventos: { valor: Evento; texto: string }[] = [
   { valor: 'A', texto: 'A (crítica)' },
   { valor: 'B', texto: 'B (vector de ataque)' },
   { valor: 'C', texto: 'C (privilegios)' },
 ]
-
-const vectores: { valor: Vector; texto: string }[] = [
-  { valor: 'NETWORK', texto: 'Red (NETWORK)' },
-  { valor: 'ADJACENT_NETWORK', texto: 'Red adyacente (ADJACENT_NETWORK)' },
-  { valor: 'ADJACENT', texto: 'Adyacente (ADJACENT)' },
-  { valor: 'LOCAL', texto: 'Local (LOCAL)' },
-  { valor: 'PHYSICAL', texto: 'Físico (PHYSICAL)' },
-]
-
-const privilegiosOpciones: { valor: Privilegios; texto: string }[] = [
-  { valor: 'NONE', texto: 'Ninguno (NONE)' },
-  { valor: 'LOW', texto: 'Bajos (LOW)' },
-  { valor: 'HIGH', texto: 'Altos (HIGH)' },
-]
-
-function mensajeDe(error: unknown): string {
-  if (error instanceof ErrorApi) return error.message
-  return 'Ocurrió un error inesperado.'
-}
 
 const f = (n: number) => n.toFixed(4)
 
@@ -56,9 +36,9 @@ export default function Reglas() {
   const [error, setError] = useState<string | null>(null)
 
   async function calcular() {
-    const valor = Number(umbral)
-    if (umbral.trim() === '' || Number.isNaN(valor) || valor < 0 || valor > 10) {
-      setError('El umbral debe ser un número entre 0 y 10.')
+    const valor = leerUmbral(umbral)
+    if (valor === null) {
+      setError(MENSAJE_UMBRAL)
       return
     }
     if (x === y) {
@@ -123,7 +103,7 @@ export default function Reglas() {
                 <Campo etiqueta="Vector de ataque (B)" htmlFor="vector">
                   <SelectOpciones
                     id="vector"
-                    opciones={vectores}
+                    opciones={VECTORES}
                     valor={vector}
                     onCambio={setVector}
                   />
@@ -131,7 +111,7 @@ export default function Reglas() {
                 <Campo etiqueta="Privilegios (C)" htmlFor="privilegios">
                   <SelectOpciones
                     id="privilegios"
-                    opciones={privilegiosOpciones}
+                    opciones={PRIVILEGIOS}
                     valor={privilegios}
                     onCambio={setPrivilegios}
                   />

@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { api, ErrorApi } from '@/api/cliente'
-import type { BayesOut, CriteriosIn } from '@/api/tipos'
-import Cargando from '@/componentes/Cargando'
-import MensajeError from '@/componentes/MensajeError'
+import { api } from '@/api/cliente'
+import type { BayesOut, Privilegios, Vector } from '@/api/tipos'
+import { leerUmbral, MENSAJE_UMBRAL, mensajeDe, PRIVILEGIOS, VECTORES } from '@/lib/dominio'
+import Cargando from '@/components/comunes/Cargando'
+import MensajeError from '@/components/comunes/MensajeError'
 import { Campo } from '@/components/campo'
 import { DosColumnas } from '@/components/dos-columnas'
 import { Formulario } from '@/components/formulario'
@@ -12,32 +13,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 
 type Condicionante = BayesOut['condicionante']
-type Vector = NonNullable<CriteriosIn['vector']>
-type Privilegios = NonNullable<CriteriosIn['privilegios']>
 
 const condicionantes: { valor: Condicionante; texto: string }[] = [
   { valor: 'B', texto: 'B (vector de ataque)' },
   { valor: 'C', texto: 'C (privilegios)' },
 ]
-
-const vectores: { valor: Vector; texto: string }[] = [
-  { valor: 'NETWORK', texto: 'Red (NETWORK)' },
-  { valor: 'ADJACENT_NETWORK', texto: 'Red adyacente (ADJACENT_NETWORK)' },
-  { valor: 'ADJACENT', texto: 'Adyacente (ADJACENT)' },
-  { valor: 'LOCAL', texto: 'Local (LOCAL)' },
-  { valor: 'PHYSICAL', texto: 'Físico (PHYSICAL)' },
-]
-
-const privilegiosOpciones: { valor: Privilegios; texto: string }[] = [
-  { valor: 'NONE', texto: 'Ninguno (NONE)' },
-  { valor: 'LOW', texto: 'Bajos (LOW)' },
-  { valor: 'HIGH', texto: 'Altos (HIGH)' },
-]
-
-function mensajeDe(error: unknown): string {
-  if (error instanceof ErrorApi) return error.message
-  return 'Ocurrió un error inesperado.'
-}
 
 const f = (n: number) => n.toFixed(4)
 
@@ -53,9 +33,9 @@ export default function Bayes() {
   const [error, setError] = useState<string | null>(null)
 
   async function calcular() {
-    const valorUmbral = Number(umbral)
-    if (umbral.trim() === '' || Number.isNaN(valorUmbral) || valorUmbral < 0 || valorUmbral > 10) {
-      setError('El umbral debe ser un número entre 0 y 10.')
+    const valorUmbral = leerUmbral(umbral)
+    if (valorUmbral === null) {
+      setError(MENSAJE_UMBRAL)
       return
     }
     let valorPrior: number | undefined
@@ -139,7 +119,7 @@ export default function Bayes() {
                 <Campo etiqueta="Vector de ataque (B)" htmlFor="vector">
                   <SelectOpciones
                     id="vector"
-                    opciones={vectores}
+                    opciones={VECTORES}
                     valor={vector}
                     onCambio={setVector}
                   />
@@ -147,7 +127,7 @@ export default function Bayes() {
                 <Campo etiqueta="Privilegios (C)" htmlFor="privilegios">
                   <SelectOpciones
                     id="privilegios"
-                    opciones={privilegiosOpciones}
+                    opciones={PRIVILEGIOS}
                     valor={privilegios}
                     onCambio={setPrivilegios}
                   />

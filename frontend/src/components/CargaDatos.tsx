@@ -1,5 +1,6 @@
-import { useState, useEffect, type FormEvent, type ChangeEvent, type DragEvent } from "react";
+import { useState, type FormEvent, type ChangeEvent, type DragEvent } from "react";
 import { apiFrontB, type ResumenDatos } from "@/api/cliente";
+import { useDatos } from "@/contexto/datos";
 import { Campo } from "@/components/campo";
 import { Formulario } from "@/components/formulario";
 import { SelectorFecha } from "@/components/selector-fecha";
@@ -40,24 +41,10 @@ export function CargaDatos({ onDatosActualizados, onNotificar }: CargaDatosProps
   const [fin, setFin] = useState<string>("2026-01-31");
   const [archivo, setArchivo] = useState<File | null>(null);
   const [arrastrando, setArrastrando] = useState<boolean>(false);
-  const [resumen, setResumen] = useState<ResumenDatos | null>(null);
+  // El resumen del conjunto cargado vive en el contexto: lo ven también la barra de contexto y las demás páginas
+  const { resumen, alCargar } = useDatos();
   const [cargando, setCargando] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let activo = true;
-    apiFrontB
-      .obtenerResumen()
-      .then((data) => {
-        if (activo) setResumen(data);
-      })
-      .catch(() => {
-        // Aún no hay datos cargados
-      });
-    return () => {
-      activo = false;
-    };
-  }, []);
 
   const manejarCargaFechas = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -75,7 +62,7 @@ export function CargaDatos({ onDatosActualizados, onNotificar }: CargaDatosProps
     setCargando(true);
     try {
       const data = await apiFrontB.cargarPorFechas({ inicio, fin });
-      setResumen(data);
+      alCargar(data);
       onDatosActualizados?.(data);
       onNotificar?.(`✅ ${data.N.toLocaleString()} CVEs cargados desde NVD`);
     } catch (err) {
@@ -114,7 +101,7 @@ export function CargaDatos({ onDatosActualizados, onNotificar }: CargaDatosProps
     setCargando(true);
     try {
       const data = await apiFrontB.cargarArchivoCsv(archivo);
-      setResumen(data);
+      alCargar(data);
       onDatosActualizados?.(data);
       onNotificar?.(`✅ Archivo "${archivo.name}" procesado (${data.N} válidos)`);
     } catch (err) {

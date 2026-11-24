@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import Layout from './componentes/Layout.tsx'
+import Layout from '@/components/layout/Layout'
 import Datos from './paginas/Datos.tsx'
 import Eventos from './paginas/Eventos.tsx'
 import Reglas from './paginas/Reglas.tsx'

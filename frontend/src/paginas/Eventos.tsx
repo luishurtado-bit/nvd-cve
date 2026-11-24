@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
-import { api, ErrorApi } from '@/api/cliente'
-import type { CriteriosIn, EventosOut, ResumenDatos } from '@/api/tipos'
-import Cargando from '@/componentes/Cargando'
-import MensajeError from '@/componentes/MensajeError'
+import { useState } from 'react'
+import { api } from '@/api/cliente'
+import type { EventosOut, Privilegios, Vector } from '@/api/tipos'
+import { useDatos } from '@/contexto/datos'
+import { leerUmbral, MENSAJE_UMBRAL, mensajeDe, PRIVILEGIOS, VECTORES } from '@/lib/dominio'
+import Cargando from '@/components/comunes/Cargando'
+import MensajeError from '@/components/comunes/MensajeError'
 import { Campo } from '@/components/campo'
 import { DosColumnas } from '@/components/dos-columnas'
 import { Formulario } from '@/components/formulario'
@@ -12,22 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-type Vector = NonNullable<CriteriosIn['vector']>
-type Privilegios = NonNullable<CriteriosIn['privilegios']>
-
-const vectores: { valor: Vector; texto: string }[] = [
-  { valor: 'NETWORK', texto: 'Red (NETWORK)' },
-  { valor: 'ADJACENT_NETWORK', texto: 'Red adyacente (ADJACENT_NETWORK)' },
-  { valor: 'ADJACENT', texto: 'Adyacente (ADJACENT)' },
-  { valor: 'LOCAL', texto: 'Local (LOCAL)' },
-  { valor: 'PHYSICAL', texto: 'Físico (PHYSICAL)' },
-]
-
-const privilegiosOpciones: { valor: Privilegios; texto: string }[] = [
-  { valor: 'NONE', texto: 'Ninguno (NONE)' },
-  { valor: 'LOW', texto: 'Bajos (LOW)' },
-  { valor: 'HIGH', texto: 'Altos (HIGH)' },
-]
 
 const filas: { clave: keyof EventosOut['eventos']; evento: string }[] = [
   { clave: 'A', evento: 'A: crítica (baseScore ≥ umbral)' },
@@ -39,14 +25,8 @@ const filas: { clave: keyof EventosOut['eventos']; evento: string }[] = [
   { clave: 'ABC', evento: 'A ∩ B ∩ C' },
 ]
 
-function mensajeDe(error: unknown): string {
-  if (error instanceof ErrorApi) return error.message
-  return 'Ocurrió un error inesperado.'
-}
-
 export default function Eventos() {
-  const [resumen, setResumen] = useState<ResumenDatos | null>(null)
-  const [errorResumen, setErrorResumen] = useState<string | null>(null)
+  const { resumen, error: errorResumen } = useDatos()
 
   const [umbral, setUmbral] = useState('9')
   const [vector, setVector] = useState<Vector>('NETWORK')
@@ -56,25 +36,10 @@ export default function Eventos() {
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let activo = true
-    api
-      .resumen()
-      .then((d) => {
-        if (activo) setResumen(d)
-      })
-      .catch((e: unknown) => {
-        if (activo) setErrorResumen(mensajeDe(e))
-      })
-    return () => {
-      activo = false
-    }
-  }, [])
-
   async function calcular() {
-    const valor = Number(umbral)
-    if (umbral.trim() === '' || Number.isNaN(valor) || valor < 0 || valor > 10) {
-      setError('El umbral debe ser un número entre 0 y 10.')
+    const valor = leerUmbral(umbral)
+    if (valor === null) {
+      setError(MENSAJE_UMBRAL)
       return
     }
     setError(null)
@@ -143,12 +108,12 @@ export default function Eventos() {
                     />
                   </Campo>
                   <Campo etiqueta="Vector de ataque (B)" htmlFor="vector">
-                    <SelectOpciones id="vector" opciones={vectores} valor={vector} onCambio={setVector} />
+                    <SelectOpciones id="vector" opciones={VECTORES} valor={vector} onCambio={setVector} />
                   </Campo>
                   <Campo etiqueta="Privilegios requeridos (C)" htmlFor="privilegios">
                     <SelectOpciones
                       id="privilegios"
-                      opciones={privilegiosOpciones}
+                      opciones={PRIVILEGIOS}
                       valor={privilegios}
                       onCambio={setPrivilegios}
                     />

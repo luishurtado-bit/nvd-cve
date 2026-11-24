@@ -17,7 +17,7 @@ import {
   type SerieDiariaOut,
   type HistogramaOut,
 } from "@/api/cliente";
-import Cargando from "@/componentes/Cargando";
+import Cargando from "@/components/comunes/Cargando";
 import { Campo } from "@/components/campo";
 import { SelectOpciones } from "@/components/select-opciones";
 import { SelectorFecha } from "@/components/selector-fecha";
