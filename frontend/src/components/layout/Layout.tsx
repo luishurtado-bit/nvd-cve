@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { ChartColumn, Combine, Database, LayoutDashboard, Moon, Percent, Scale, ShieldAlert, Sun } from 'lucide-react'
+import { ChartColumn, Combine, Database, LayoutDashboard, Moon, Percent, Scale, ShieldAlert, SlidersHorizontal, Sun } from 'lucide-react'
 import { api } from '@/api/cliente'
 import BarraContexto from '@/components/layout/BarraContexto'
 import PieFuente from '@/components/layout/PieFuente'
@@ -27,12 +27,8 @@ import { cn } from '@/lib/utils'
 
 const enlaces = [
   { ruta: '/', texto: 'Inicio', titulo: 'Dashboard de vulnerabilidades CVE', icono: LayoutDashboard },
-  {
-    ruta: '/datos',
-    texto: 'Datos y dashboard',
-    titulo: 'Carga de datos y dashboard descriptivo',
-    icono: Database,
-  },
+  { ruta: '/datos', texto: 'Datos', titulo: 'Carga de datos', icono: Database },
+  { ruta: '/descriptivo', texto: 'Descriptivo', titulo: 'Análisis descriptivo', icono: SlidersHorizontal },
   { ruta: '/eventos', texto: 'Eventos', titulo: 'Datos y eventos A, B y C', icono: Combine },
   { ruta: '/reglas', texto: 'Reglas', titulo: 'Reglas de probabilidad', icono: Scale },
   {

@@ -218,9 +218,3 @@ export function descargarPng(contenedor: HTMLElement, nombreArchivo: string, opc
   img.onerror = () => URL.revokeObjectURL(url);
   img.src = url;
 }
-
-/** Versión anterior, por id del contenedor y sin título: la usa el dashboard viejo hasta que se reemplace. */
-export function descargarGraficaPng(contenedorId: string, nombreArchivo: string): void {
-  const contenedor = document.getElementById(contenedorId);
-  if (contenedor) descargarPng(contenedor, nombreArchivo, { fondo: "#ffffff", texto: "#0f172a" });
-}

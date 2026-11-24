@@ -18,6 +18,8 @@ export interface Paleta {
   /** Color de lo crítico (% de críticos). */
   critico: string
   neutro: string
+  /** Colores para series categóricas (no se confunden con los de severidad). */
+  serie: string[]
   severidad: Record<Severidad, string>
 }
 
@@ -29,6 +31,7 @@ export const PALETA_CLARA: Paleta = {
   principal: '#2563eb',
   critico: '#dc2626',
   neutro: '#94a3b8',
+  serie: ['#2563eb', '#0891b2', '#16a34a', '#d97706', '#9333ea'],
   severidad: { CRITICAL: '#dc2626', HIGH: '#ea580c', MEDIUM: '#ca8a04', LOW: '#2563eb', NONE: '#64748b' },
 }
 
@@ -40,6 +43,7 @@ export const PALETA_OSCURA: Paleta = {
   principal: '#60a5fa',
   critico: '#f87171',
   neutro: '#64748b',
+  serie: ['#60a5fa', '#22d3ee', '#4ade80', '#fbbf24', '#c084fc'],
   severidad: { CRITICAL: '#f87171', HIGH: '#fb923c', MEDIUM: '#facc15', LOW: '#60a5fa', NONE: '#94a3b8' },
 }
 

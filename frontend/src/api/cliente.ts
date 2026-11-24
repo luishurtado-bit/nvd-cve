@@ -28,8 +28,8 @@ import type {
   Vector,
 } from './tipos.ts'
 
-// Los componentes del Front B importan estos tipos desde aquí
-export type { CargarIn, DistribucionOut, HistogramaOut, ResumenDatos, SerieDiariaOut } from './tipos.ts'
+// La página de carga importa este tipo desde aquí
+export type { ResumenDatos } from './tipos.ts'
 
 export class ErrorApi extends Error {
   estado: number
@@ -181,11 +181,9 @@ export function urlExportar(recurso: RecursoExportable, params?: Params): string
   return urlApi(`/api/exportar/${recurso}`, params)
 }
 
-// Front B: se reemplaza por `api.datos` y `api.dashboard` en las iteraciones 3 y 4, y se borra.
+// Carga de datos de la página «Datos»: se reemplaza por `api.datos` en la iteración 4 y se borra.
 // Usa el mismo manejo de errores que el resto (ErrorApi extiende Error).
 export const apiFrontB = {
-  obtenerResumen: () => pedir<ResumenDatos>('/api/datos/resumen'),
-
   cargarPorFechas: (fechas: CargarIn) => enviar<ResumenDatos>('/api/datos/cargar', fechas),
 
   cargarArchivoCsv: (archivo: File) => {
@@ -193,16 +191,4 @@ export const apiFrontB = {
     formData.append('archivo', archivo)
     return pedir<ResumenDatos>('/api/datos/archivo', { method: 'POST', body: formData })
   },
-
-  obtenerSeveridad: () => pedir<DistribucionOut>('/api/dashboard/severidad'),
-
-  obtenerVectorAtaque: () => pedir<DistribucionOut>('/api/dashboard/vector-ataque'),
-
-  obtenerSerieDiaria: () => pedir<SerieDiariaOut>('/api/dashboard/serie-diaria'),
-
-  obtenerHistograma: (bins?: number) =>
-    pedir<HistogramaOut>(bins ? `/api/dashboard/histograma?bins=${bins}` : '/api/dashboard/histograma'),
-
-  obtenerCwe: (top?: number) =>
-    pedir<DistribucionOut>(top ? `/api/dashboard/cwe?top=${top}` : '/api/dashboard/cwe'),
 }

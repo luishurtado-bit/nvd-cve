@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { CriticoPorOut, VariableGrupo } from '@/api/tipos'
 import TarjetaGrafica from '@/components/comunes/TarjetaGrafica'
 import GraficoBarras, { type BarraDato } from '@/components/graficos/GraficoBarras'
@@ -25,10 +26,12 @@ interface Props {
   cargando?: boolean
   error?: string | null
   className?: string
+  /** Controles que van sobre el gráfico, por ejemplo el selector de la variable. */
+  controles?: ReactNode
 }
 
 /** Porcentaje de críticos dentro de cada grupo, contra el de todo el conjunto (línea punteada). Es una observación, no una causa. */
-export default function GraficoCriticoPor({ variable, datos, cargando, error, className }: Props) {
+export default function GraficoCriticoPor({ variable, datos, cargando, error, className, controles }: Props) {
   const v = VARIABLES[variable]
   const paleta = usePaleta()
   const grupos = datos?.grupos ?? []
@@ -38,6 +41,8 @@ export default function GraficoCriticoPor({ variable, datos, cargando, error, cl
     detalle: fraccion(g.criticos, g.total),
   }))
   const global = datos?.proporcion_criticos ?? null
+  // Las fuentes tienen nombres largos (correos): en horizontal se leen mejor
+  const horizontal = variable === 'fuente'
 
   return (
     <TarjetaGrafica
@@ -45,6 +50,8 @@ export default function GraficoCriticoPor({ variable, datos, cargando, error, cl
       titulo={v.titulo}
       pregunta="P2"
       nombreArchivo={v.nombreArchivo}
+      altura={horizontal ? 360 : 280}
+      controles={controles}
       cargando={cargando}
       error={error}
       vacio={datos !== undefined && grupos.length === 0}
@@ -63,8 +70,9 @@ export default function GraficoCriticoPor({ variable, datos, cargando, error, cl
       <GraficoBarras
         datos={barras}
         nombreValor="Críticos"
-        tituloEjeX={v.eje}
-        tituloEjeY="% de CVE críticos"
+        horizontal={horizontal}
+        tituloCategorias={v.eje}
+        tituloValores="% de CVE críticos"
         formatoValor={(x) => porcentaje(x)}
         referencia={global ?? undefined}
       />

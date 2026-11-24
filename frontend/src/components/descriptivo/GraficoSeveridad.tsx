@@ -44,7 +44,7 @@ export default function GraficoSeveridad({ datos, cargando, error, className }: 
         filas: filas.map((f) => [f.etiqueta, f.conteo, f.proporcion]),
       }}
     >
-      <GraficoBarras datos={barras} nombreValor="CVE" tituloEjeX="Severidad CVSS" tituloEjeY="Número de CVE" />
+      <GraficoBarras datos={barras} nombreValor="CVE" tituloCategorias="Severidad CVSS" tituloValores="Número de CVE" />
     </TarjetaGrafica>
   )
 }

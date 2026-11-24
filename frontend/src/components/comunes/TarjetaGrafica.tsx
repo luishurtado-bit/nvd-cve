@@ -57,6 +57,8 @@ interface Props {
   error?: string | null
   vacio?: boolean
   mensajeVacio?: string
+  /** Controles sobre el gráfico (por ejemplo, un selector); se ven siempre, aunque el gráfico esté cargando. */
+  controles?: ReactNode
   /** Alto del gráfico en píxeles. */
   altura?: number
   className?: string
@@ -80,6 +82,7 @@ export default function TarjetaGrafica({
   error,
   vacio,
   mensajeVacio = 'No hay datos para mostrar.',
+  controles,
   altura = 280,
   className,
   children,
@@ -139,6 +142,7 @@ export default function TarjetaGrafica({
       </CardHeader>
 
       <CardContent>
+        {controles ? <div className="mb-3">{controles}</div> : null}
         {cargando ? <Skeleton className="w-full" style={{ height: altura }} /> : null}
         {!cargando && error ? (
           <Alert variant="destructive">

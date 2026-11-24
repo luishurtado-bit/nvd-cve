@@ -13,6 +13,9 @@ interface SelectorFechaProps {
   onCambio: (valor: string) => void
   placeholder?: string
   disabled?: boolean
+  /** Primer y último día elegibles (AAAA-MM-DD); sin ellos, desde 1999 hasta el año siguiente. */
+  min?: string
+  max?: string
 }
 
 // Rango del selector: la NVD publica desde 1999 hasta hoy (se deja hasta fin del año siguiente).
@@ -35,9 +38,14 @@ export function SelectorFecha({
   onCambio,
   placeholder = 'Selecciona una fecha',
   disabled,
+  min,
+  max,
 }: SelectorFechaProps) {
   const [abierto, setAbierto] = useState(false)
   const fecha = aFecha(valor)
+  const primero = min ? aFecha(min) : undefined
+  const ultimo = max ? aFecha(max) : undefined
+  const noElegibles = [primero && { before: primero }, ultimo && { after: ultimo }].filter((m) => m !== undefined)
 
   return (
     <Popover open={abierto} onOpenChange={setAbierto}>
@@ -62,8 +70,9 @@ export function SelectorFecha({
           selected={fecha}
           defaultMonth={fecha}
           captionLayout="dropdown"
-          startMonth={PRIMER_MES}
-          endMonth={ULTIMO_MES}
+          startMonth={primero ?? PRIMER_MES}
+          endMonth={ultimo ?? ULTIMO_MES}
+          disabled={noElegibles}
           onSelect={(elegida) => {
             onCambio(elegida ? format(elegida, 'yyyy-MM-dd') : '')
             setAbierto(false)
