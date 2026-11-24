@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { ResumenDatos } from '@/api/tipos'
 import { numero, periodo } from '@/lib/formato'
 
@@ -27,6 +28,11 @@ export default function Limitaciones({ resumen }: { resumen: ResumenDatos }) {
           no una causa.
         </li>
       </ul>
+      <p className="mt-3 mb-0">
+        <Link to="/datos?pestana=calidad" className="underline underline-offset-2">
+          Ver cómo se limpiaron los datos, paso a paso →
+        </Link>
+      </p>
     </details>
   )
 }

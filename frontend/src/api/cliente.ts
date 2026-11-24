@@ -28,9 +28,6 @@ import type {
   Vector,
 } from './tipos.ts'
 
-// La página de carga importa este tipo desde aquí
-export type { ResumenDatos } from './tipos.ts'
-
 export class ErrorApi extends Error {
   estado: number
 
@@ -179,16 +176,4 @@ export type RecursoExportable = 'cve' | 'crudo' | 'calidad' | 'eventos' | 'regla
 /** Enlace de descarga de /api/exportar/{recurso}; sirve como `href` de un <a download>. */
 export function urlExportar(recurso: RecursoExportable, params?: Params): string {
   return urlApi(`/api/exportar/${recurso}`, params)
-}
-
-// Carga de datos de la página «Datos»: se reemplaza por `api.datos` en la iteración 4 y se borra.
-// Usa el mismo manejo de errores que el resto (ErrorApi extiende Error).
-export const apiFrontB = {
-  cargarPorFechas: (fechas: CargarIn) => enviar<ResumenDatos>('/api/datos/cargar', fechas),
-
-  cargarArchivoCsv: (archivo: File) => {
-    const formData = new FormData()
-    formData.append('archivo', archivo)
-    return pedir<ResumenDatos>('/api/datos/archivo', { method: 'POST', body: formData })
-  },
 }

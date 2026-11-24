@@ -27,7 +27,7 @@ import { cn } from '@/lib/utils'
 
 const enlaces = [
   { ruta: '/', texto: 'Inicio', titulo: 'Dashboard de vulnerabilidades CVE', icono: LayoutDashboard },
-  { ruta: '/datos', texto: 'Datos', titulo: 'Carga de datos', icono: Database },
+  { ruta: '/datos', texto: 'Datos y calidad', titulo: 'Carga y calidad de los datos', icono: Database },
   { ruta: '/descriptivo', texto: 'Descriptivo', titulo: 'Análisis descriptivo', icono: SlidersHorizontal },
   { ruta: '/eventos', texto: 'Eventos', titulo: 'Datos y eventos A, B y C', icono: Combine },
   { ruta: '/reglas', texto: 'Reglas', titulo: 'Reglas de probabilidad', icono: Scale },

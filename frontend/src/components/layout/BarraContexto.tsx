@@ -41,7 +41,7 @@ export default function BarraContexto() {
         <AlertTitle>Estás viendo datos simulados</AlertTitle>
         <AlertDescription>
           Son {numero(resumen.N)} CVE de ejemplo, no vienen de la NVD. Para trabajar con datos reales,
-          descarga un periodo en «Datos y dashboard».
+          descarga un periodo en «Datos y calidad».
         </AlertDescription>
       </Alert>
     )
