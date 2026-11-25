@@ -1,4 +1,4 @@
-import { Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { Agrupacion, PuntoSerie } from '@/api/tipos'
 import CajaTooltip from '@/components/graficos/CajaTooltip'
 import { fechaCorta, numero, porcentaje } from '@/lib/formato'
@@ -21,16 +21,19 @@ interface Props {
   agrupar: Agrupacion
 }
 
-/** Barras con el número de CVE publicados por periodo y, encima, una línea con el % de críticos (eje derecho). */
+/**
+ * Una barra por periodo con el total de CVE publicados; la parte de abajo, en otro color, son los
+ * críticos. Un solo eje (número de CVE): el % de críticos se lee en el tooltip y en la tabla.
+ */
 export default function GraficoSerie({ puntos, agrupar }: Props) {
   const paleta = usePaleta()
   const texto = { fill: paleta.texto, fontSize: 12 }
   const titulo = { fill: paleta.textoSuave, fontSize: 12 }
-  const datos = puntos.map((p) => ({ ...p, etiqueta: marca(p.fecha, agrupar), porcentajeCriticos: p.proporcion_criticos }))
+  const datos = puntos.map((p) => ({ ...p, etiqueta: marca(p.fecha, agrupar), noCriticos: p.conteo - p.criticos }))
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={datos} margin={{ top: 16, right: 8, bottom: 30, left: 8 }}>
+      <BarChart data={datos} margin={{ top: 16, right: 8, bottom: 30, left: 8 }}>
         <CartesianGrid stroke={paleta.rejilla} strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey="etiqueta"
@@ -41,22 +44,11 @@ export default function GraficoSerie({ puntos, agrupar }: Props) {
           label={{ value: TITULO_EJE_X[agrupar], position: 'insideBottom', offset: -16, ...titulo }}
         />
         <YAxis
-          yAxisId="izquierda"
           stroke={paleta.rejilla}
           tick={texto}
           tickFormatter={(v: number) => numero(v)}
           width={76}
           label={{ value: 'Número de CVE', angle: -90, position: 'insideLeft', offset: 4, style: { textAnchor: 'middle' }, ...titulo }}
-        />
-        <YAxis
-          yAxisId="derecha"
-          orientation="right"
-          stroke={paleta.rejilla}
-          tick={texto}
-          domain={[0, 'auto']}
-          tickFormatter={(v: number) => porcentaje(v, 0)}
-          width={76}
-          label={{ value: '% de CVE críticos', angle: 90, position: 'insideRight', offset: 4, style: { textAnchor: 'middle' }, ...titulo }}
         />
         <Tooltip
           cursor={{ fill: paleta.rejilla, opacity: 0.4 }}
@@ -74,17 +66,9 @@ export default function GraficoSerie({ puntos, agrupar }: Props) {
             )
           }}
         />
-        <Bar yAxisId="izquierda" dataKey="conteo" fill={paleta.principal} radius={[3, 3, 0, 0]} maxBarSize={40} isAnimationActive={false} />
-        <Line
-          yAxisId="derecha"
-          dataKey="porcentajeCriticos"
-          type="monotone"
-          stroke={paleta.critico}
-          strokeWidth={2.5}
-          dot={{ r: 3, fill: paleta.critico, stroke: paleta.critico }}
-          isAnimationActive={false}
-        />
-      </ComposedChart>
+        <Bar dataKey="criticos" stackId="cve" fill={paleta.critico} maxBarSize={40} isAnimationActive={false} />
+        <Bar dataKey="noCriticos" stackId="cve" fill={paleta.principal} radius={[3, 3, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+      </BarChart>
     </ResponsiveContainer>
   )
 }

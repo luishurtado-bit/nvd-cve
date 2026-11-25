@@ -23,7 +23,7 @@ export default function GraficoSerieAgrupada({ datos, cargando, error, className
   return (
     <TarjetaGrafica
       className={className}
-      titulo={`CVE publicados y % de críticos por ${POR[agrupar]}`}
+      titulo={`CVE publicados y cuántos son críticos, por ${POR[agrupar]}`}
       pregunta="P3"
       nombreArchivo={`serie_cve_${agrupar}`}
       altura={320}
@@ -32,15 +32,15 @@ export default function GraficoSerieAgrupada({ datos, cargando, error, className
       vacio={datos !== undefined && puntos.length === 0}
       mensajeVacio="No hay CVE publicados en el periodo."
       descripcion={
-        `Barras con los CVE publicados por ${POR[agrupar]} y línea con el porcentaje de críticos. ` +
+        `Barras apiladas: la altura es el total de CVE publicados por ${POR[agrupar]} y la parte inferior son los críticos. ` +
         (puntos.length
           ? `Desde ${fechaCorta(puntos[0].fecha)} hasta ${fechaCorta(puntos[puntos.length - 1].fecha)}, ${numero(datos?.total)} CVE en total` +
             (pico ? `; el máximo fue ${numero(pico.conteo)} CVE el periodo que empieza el ${fechaCorta(pico.fecha)}.` : '.')
           : '')
       }
       leyenda={[
-        { color: paleta.principal, texto: 'CVE publicados (eje izquierdo)' },
-        { color: paleta.critico, texto: '% de críticos (eje derecho)', forma: 'linea' },
+        { color: paleta.principal, texto: 'Resto de CVE publicados' },
+        { color: paleta.critico, texto: 'CVE críticos (dentro de cada barra)' },
       ]}
       tabla={{
         columnas: [
