@@ -4,7 +4,6 @@ import Inicio from './paginas/Inicio.tsx'
 import Datos from './paginas/Datos.tsx'
 import Descriptivo from './paginas/Descriptivo.tsx'
 import Eventos from './paginas/Eventos.tsx'
-import Reglas from './paginas/Reglas.tsx'
 import Bayes from './paginas/Bayes.tsx'
 import Binomial from './paginas/Binomial.tsx'
 
@@ -16,7 +15,7 @@ export default function App() {
         <Route path="datos" element={<Datos />} />
         <Route path="descriptivo" element={<Descriptivo />} />
         <Route path="eventos" element={<Eventos />} />
-        <Route path="reglas" element={<Reglas />} />
+        <Route path="reglas" element={<Navigate to="/eventos" replace />} />
         <Route path="bayes" element={<Bayes />} />
         <Route path="binomial" element={<Binomial />} />
         <Route path="*" element={<Navigate to="/" replace />} />
