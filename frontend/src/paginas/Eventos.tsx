@@ -25,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import BotonExportar from '@/components/comunes/BotonExportar'
 
 type Evento = ReglasOut['x']
 type ClaveRegla = 'compX' | 'compY' | 'inter' | 'union' | 'cond'
@@ -145,7 +146,22 @@ export default function Eventos() {
           <>
             {!ev && eventos.cargando && <Cargando texto="Calculando…" />}
             {eventos.error && <MensajeError mensaje={eventos.error} />}
-
+            {ev && (
+              <div className="flex flex-wrap justify-end gap-2">
+                <BotonExportar
+                  recurso="eventos"
+                  texto="CSV eventos"
+                  params={{ umbral: valorUmbral ?? 9, vector, privilegios }}
+                />
+                {x !== y ? (
+                  <BotonExportar
+                    recurso="reglas"
+                    texto="CSV reglas"
+                    params={{ umbral: valorUmbral ?? 9, vector, privilegios, x, y }}
+                  />
+                ) : null}
+              </div>
+            )}
             {/* Las tres tarjetas A, B y C */}
             {ev && (
               <div className="grid gap-3 sm:grid-cols-3">

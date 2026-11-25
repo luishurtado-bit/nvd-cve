@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import BotonExportar from '@/components/comunes/BotonExportar'
 
 type Pregunta = 'igual' | 'maximo' | 'minimo'
 
@@ -85,7 +86,7 @@ export default function Binomial() {
         : pregunta === 'maximo'
           ? kk <= datos.k
           : kk >= datos.k
-
+  const etiquetaPregunta = PREGUNTAS.find((q) => q.valor === pregunta)?.etiqueta ?? ''
   return (
     <section>
       <h2 className="mb-1 mt-0 text-xl font-semibold">
@@ -227,7 +228,18 @@ export default function Binomial() {
                       {datos.k} = {porcentaje(datos.prob_a_lo_sumo)} · al menos {datos.k} ={' '}
                       {porcentaje(datos.prob_al_menos)}.
                     </p>
-                    <GraficoPmf pmf={datos.pmf} resalta={resalta} kElegido={datos.k} />
+                    <GraficoPmf
+                      pmf={datos.pmf}
+                      resalta={resalta}
+                      kElegido={datos.k}
+                      subtitulo={`¿Cuántos críticos hay en un lote de ${datos.n}? Se resaltan las barras de «${etiquetaPregunta}» ${datos.k}.`}
+                    />
+                    <div className="flex justify-end">
+                      <BotonExportar
+                        recurso="binomial"
+                        params={{ n: datos.n, k: datos.k, umbral: datos.umbral, p: datos.p_estimada ? undefined : datos.p }}
+                      />
+                    </div>
                     <details className="rounded-md border bg-muted/30 text-sm">
                       <summary className="cursor-pointer select-none px-3 py-2 font-medium">
                         Ver tabla de la distribución

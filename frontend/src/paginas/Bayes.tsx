@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import BotonExportar from '@/components/comunes/BotonExportar'
 
 type Condicionante = BayesOut['condicionante']
 
@@ -159,7 +160,17 @@ export default function Bayes() {
             {!datos && cargando && <Cargando texto="Calculando…" />}
             {error && <MensajeError mensaje={error} />}
 
-            {datos && <Resultados datos={datos} frase={frase} />}
+            {datos && (
+              <>
+                <div className="flex justify-end">
+                  <BotonExportar
+                    recurso="bayes"
+                    params={{ umbral: valorUmbral ?? 9, vector, privilegios, condicionante, prior }}
+                  />
+                </div>
+                <Resultados datos={datos} frase={frase} />
+              </>
+            )}
           </>
         }
       />
