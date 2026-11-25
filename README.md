@@ -6,11 +6,8 @@ A partir de los datos de la National Vulnerability Database (NVD) del NIST, el s
 
 | Documento | Para qué |
 |---|---|
-| [plan-de-trabajo-v2.md](plan-de-trabajo-v2.md) | Plan vigente: reparto del trabajo (backend y frontend), tareas y entregables |
-| [plan-de-trabajo-software.md](plan-de-trabajo-software.md) | Plan anterior (fases 1 a 3), como historial |
 | [docs/contrato-api.md](docs/contrato-api.md) | Qué hace cada ruta de la API y qué parámetros acepta |
 | [docs/diccionario-de-datos.md](docs/diccionario-de-datos.md) | Las 20 variables, los pasos de la limpieza y los archivos de `data/` |
-| [docs/pendientes-front-a.md](docs/pendientes-front-a.md) | Lo que falta de las páginas de estadística y las piezas del frontend que se pueden reutilizar |
 | `nvd-electiva-3.ipynb` | Notebook de la descarga y la limpieza (evidencia reproducible para Electiva III) |
 
 ## Estructura
@@ -39,7 +36,9 @@ nvd-cve/
 | `/` | **Inicio**: el dashboard único. El problema, 5 indicadores, gráficos con la pregunta que responde cada uno, 3 hallazgos calculados y las limitaciones | Terminada |
 | `/datos` | **Datos y calidad**. Pestaña «Cargar datos»: descarga de la NVD con progreso real o subida de un CSV. Pestaña «Calidad de los datos» (`?pestana=calidad`): embudo de limpieza, nulos, atípicos, diccionario y descarga de las bases | Terminada |
 | `/descriptivo` | **Análisis descriptivo** con filtros globales (fechas, severidad, vector, privilegios) que viajan al backend | Terminada |
-| `/eventos`, `/reglas`, `/bayes`, `/binomial` | Eventos, reglas de probabilidad, Bayes y el modelo binomial | Funcionan, pero sin el rediseño del plan v2: ver [docs/pendientes-front-a.md](docs/pendientes-front-a.md) |
+| `/eventos` | **Eventos y reglas**: probabilidad de A, B y C, tabla 2×2, reglas de probabilidad e independencia | Terminada |
+| `/bayes` | **Bayes**: cómo cambia la probabilidad de que un CVE sea crítico al conocer su vector o sus privilegios | Terminada |
+| `/binomial` | **Binomial**: número de CVE críticos en un lote de n, con supuestos, E(X), σ y tamaño mínimo del lote | Terminada |
 
 Todas las páginas muestran arriba de dónde vienen los datos (origen, periodo, N y fecha de consulta) y, con datos simulados, un aviso amarillo.
 
@@ -271,4 +270,3 @@ npm install
 - Commits en formato [Conventional Commits](https://www.conventionalcommits.org/es/): `tipo(alcance): descripción`, por ejemplo `feat(stats): Se agrega el modelo binomial completo.`
 - Toda la estadística vive en `backend/stats/` (sin FastAPI) y cada función lleva su prueba contra el informe.
 - Una ruta nueva de la API necesita su caso en `backend/tests/test_endpoints.py` y su fila en [docs/contrato-api.md](docs/contrato-api.md); si no, las pruebas fallan.
-- Más detalles en [plan-de-trabajo-v2.md](plan-de-trabajo-v2.md).

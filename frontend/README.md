@@ -23,7 +23,7 @@ No hay framework de pruebas. Cada cambio se verifica con `tsc`, `lint` y `build`
 | `/` | `paginas/Inicio.tsx` | Dashboard único: indicadores, hallazgos, gráficos y limitaciones |
 | `/datos` | `paginas/Datos.tsx` | Pestañas «Cargar datos» y «Calidad de los datos» (`?pestana=calidad`) |
 | `/descriptivo` | `paginas/Descriptivo.tsx` | Descriptivo con filtros globales |
-| `/eventos`, `/reglas`, `/bayes`, `/binomial` | `paginas/*.tsx` | Estadística (pendiente de rediseño: ver [../docs/pendientes-front-a.md](../docs/pendientes-front-a.md)) |
+| `/eventos`, `/bayes`, `/binomial` | `paginas/*.tsx` | Estadística: eventos y reglas, Bayes y binomial (`/reglas` redirige a `/eventos`) |
 
 Cualquier otra ruta redirige a `/`.
 
